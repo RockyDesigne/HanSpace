@@ -1,2 +1,2 @@
-** Arcade shooter style game 
-** In development
+* Arcade shooter style game 
+* In development
