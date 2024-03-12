@@ -9,10 +9,10 @@
 
 namespace HanShip {
     using COORDS = std::pair<float,float>;
-    COORDS bottomLeft = {-25.f, -25.f};
-    COORDS bottomRight = {25.f, -25.f};
-    COORDS topLeft = {-25.f, 25.f};
-    COORDS topRight = {25.f, 25.f};
+    COORDS bottomLeft = {-100.f, -100.f};
+    COORDS bottomRight = {100.f, -100.f};
+    COORDS topLeft = {-100.f, 100.f};
+    COORDS topRight = {100.f, 100.f};
 }
 
 #endif //HANSPACE_HANSHIP_H

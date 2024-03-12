@@ -11,7 +11,7 @@
 
 namespace Textures {
     int width, height, nrChannels;
-    unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\wall.jpg)", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\SpaceShipSmall.png)", &width, &height, &nrChannels, 0);
     GLuint texId;
 
     void createTexture() {
@@ -19,7 +19,7 @@ namespace Textures {
         glGenTextures(1, &texId);
         glBindTexture(GL_TEXTURE_2D, texId);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         /*
          * A mipmap is a sequence of textures, each a power of two smaller than the previous
          * the more you zoom out, and the picture gets smaller, the lower level mipmaps are used
@@ -31,6 +31,10 @@ namespace Textures {
 
     void bindTexture() {
         glBindTexture(GL_TEXTURE_2D, texId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
 }
@@ -39,7 +43,7 @@ void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int m
     using namespace HanShip;
     (void) scancode;
     (void) mods;
-    float impulse = 25.f;
+    float impulse = 100.f;
     switch (key) {
         case GLFW_KEY_ESCAPE: {
             if (action == GLFW_PRESS)
@@ -143,6 +147,10 @@ int main() {
     //enable gl debug
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(handleMessageCallback, nullptr);
+
+    // Enable blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     //compile shaders
     GLuint vShaderId = Shaders::compile_shader(Shaders::vertexSource, GL_VERTEX_SHADER);
