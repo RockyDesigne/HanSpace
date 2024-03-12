@@ -29,10 +29,15 @@ namespace Shaders {
                              "in vec4 fragColor;\n"
                              "in vec2 fragTexCoords;\n"
                              "out vec4 outColor;\n"
-                             "uniform sampler2D Texture;\n"
+                             "uniform sampler2D shipTexture;\n"
+                             "uniform sampler2D backgroundTexture;\n"
+                             "uniform bool useShipTex;\n"
                              "void main() {\n"
                              "\n"
-                             "outColor = texture(Texture, fragTexCoords);\n"
+                             "if (useShipTex)\n"
+                             "  outColor = texture(shipTexture, fragTexCoords);\n"
+                             "else \n"
+                             "  outColor = texture(backgroundTexture, fragTexCoords);\n"
                              "}\n";
 
     GLuint compile_shader(const char* shaderSource, GLenum shaderType)

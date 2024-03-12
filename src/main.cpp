@@ -9,15 +9,39 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+namespace BackGround {
+    using COORDS = std::pair<float,float>;
+
+    COORDS bottomLeft = {0.f,0.f};
+    COORDS bottomRight = {Window::width, 0.f};
+    COORDS topLeft = {0.f, Window::height};
+    COORDS topRight = {Window::width, Window::height};
+
+    void calcBackground() {
+        bottomLeft = {0.f,0.f};
+        bottomRight = {Window::width, 0.f};
+        topLeft = {0.f, Window::height};
+        topRight = {Window::width, Window::height};
+    }
+
+    void drawBackground() {
+        Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+        Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
+        Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
+        Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
+    }
+
+}
+
 namespace Textures {
     int width, height, nrChannels;
-    unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\SpaceShipSmall.png)", &width, &height, &nrChannels, 0);
-    GLuint texId;
+    GLuint shipTexId, backgroundTexId;
 
-    void createTexture() {
+    void createShipTexture() {
+        unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\SpaceShipSmall.png)", &width, &height, &nrChannels, 0);
 
-        glGenTextures(1, &texId);
-        glBindTexture(GL_TEXTURE_2D, texId);
+        glGenTextures(1, &shipTexId);
+        glBindTexture(GL_TEXTURE_2D, shipTexId);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         /*
@@ -29,8 +53,35 @@ namespace Textures {
         stbi_image_free(data);
     }
 
-    void bindTexture() {
-        glBindTexture(GL_TEXTURE_2D, texId);
+    void createBackgroundTexture() {
+        unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\seamless space.PNG)", &width, &height, &nrChannels, 0);
+
+        glGenTextures(1, &backgroundTexId);
+        glBindTexture(GL_TEXTURE_2D, backgroundTexId);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+        glGenerateMipmap(GL_TEXTURE_2D); // this generates all the levels of the mipmap for the bound texture
+
+        stbi_image_free(data);
+    }
+
+    void bindShipTexture() {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, shipTexId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    void bindBackgroundTexture() {
+        /*
+         * TO DO
+         * no need to give the parameters like this every time, only once is enough
+         */
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, backgroundTexId);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -104,6 +155,8 @@ void handleWindowResize(GLFWwindow* window, int width, int height) {
     glViewport(width / 2 - Window::width  / 2,
                height / 2 - Window::height / 2, width,height);
     glUniform2f(RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
+    BackGround::calcBackground();
 }
 
 void handleMessageCallback(GLenum source,
@@ -161,9 +214,13 @@ int main() {
     RESOLUTION_UNIFORM = glGetUniformLocation(PROGRAM_ID, "resolution");
     glUniform2f(RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
+    //tell each sampler the unit it belongs to
+    glUniform1i(glGetUniformLocation(PROGRAM_ID, "shipTexture"), 0);
+    glUniform1i(glGetUniformLocation(PROGRAM_ID, "backgroundTexture"), 1);
+
     //prepare texture
-    Textures::createTexture();
-    Textures::bindTexture();
+    Textures::createBackgroundTexture();
+    Textures::createShipTexture();
 
     //prepare buffers
     Buffers::init_buffers();
@@ -175,21 +232,31 @@ int main() {
 
     using namespace HanShip;
 
+    /*
+     * TO DO:
+     * make a separate shader for drawing the ship and for the background, this is currently not at all optimized
+     */
     while (!glfwWindowShouldClose(winPtr)) {
-
+        glClear(GL_COLOR_BUFFER_BIT);
         Buffers::clear_buff();
 
-        Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
-        Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
-        Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
-        Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
-        Buffers::sync_buffers();
-
-        glClear(GL_COLOR_BUFFER_BIT);
+        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), false);
+        Textures::bindBackgroundTexture();
+        BackGround::drawBackground();
 
         glDrawArrays(GL_TRIANGLE_STRIP,
-                              0,
-                              4);
+                     0,
+                     4);
+
+        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), true);
+        Textures::bindShipTexture();
+        HanShip::drawShip();
+
+        glDrawArrays(GL_TRIANGLE_STRIP,
+                     4,
+                     4);
+
+        Buffers::sync_buffers();
 
         glfwSwapBuffers(winPtr);
         glfwPollEvents();
