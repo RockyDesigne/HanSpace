@@ -1,179 +1,36 @@
 #include "glad.h"
 #include <glfw3.h>
 #include <iostream>
-#include <cassert>
+#include "Window.h"
+#include "HanShip.h"
+#include "Shaders.h"
+#include "Global_Variables.h"
+#include "Buffers.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-GLuint PROGRAM_ID;
-GLint RESOLUTION_UNIFORM;
+namespace Textures {
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\wall.jpg)", &width, &height, &nrChannels, 0);
+    GLuint texId;
 
-namespace HanShip {
-    using COORDS = std::pair<float,float>;
-    COORDS bottomLeft = {-25.f, -25.f};
-    COORDS bottomRight = {25.f, -25.f};
-    COORDS topLeft = {-25.f, 25.f};
-    COORDS topRight = {25.f, 25.f};
-}
+    void createTexture() {
 
-namespace Window {
-    GLFWwindow* winPtr;
-    int width = 800;
-    int height = 600;
-    const char* title = "HanSpace";
-    constexpr const int maxWidth = 1920;
-    constexpr const int maxHeight = 1080;
-}
+        glGenTextures(1, &texId);
+        glBindTexture(GL_TEXTURE_2D, texId);
 
-namespace Shaders {
-    const char* vertexSource = "#version 460 core\n"
-                               "layout(location = 0) in vec2 position;\n"
-                               "layout(location = 1) in vec3 color;\n"
-                               "uniform vec2 resolution;\n"
-                               "out vec4 fragColor;\n"
-                               "vec2 screen_to_ndc(vec2 pos) {\n"
-                               "return (pos / resolution) * 2.0f - 1.0f;\n"
-                               "}\n"
-                               "void main() {\n"
-                               "gl_Position = vec4(screen_to_ndc(position), 0.0f, 1.0f);\n"
-                               "fragColor = vec4(color, 1.0f);\n"
-                               "}\n";
-    const char* fragSource = "#version 460 core\n"
-                             "in vec4 fragColor;\n"
-                             "out vec4 outColor;\n"
-                             "void main() {\n"
-                             "\n"
-                             "outColor = fragColor;\n"
-                             "}\n";
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        /*
+         * A mipmap is a sequence of textures, each a power of two smaller than the previous
+         * the more you zoom out, and the picture gets smaller, the lower level mipmaps are used
+         */
+        glGenerateMipmap(GL_TEXTURE_2D); // this generates all the levels of the mipmap for the bound texture
 
-    GLuint compile_shader(const char* shaderSource, GLenum shaderType)
-    {
-        GLuint shader;
-        GLint success;
-        char infoLog[512]={0};
-
-        shader = glCreateShader(shaderType);
-
-        glShaderSource(shader,1,&shaderSource,nullptr);
-
-        glCompileShader(shader);
-
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(shader, 512, nullptr, infoLog);
-            switch (shaderType) {
-                case GL_VERTEX_SHADER: {
-                    fprintf(stderr, "ERROR::SHADER::VERTEX::COMPILATION_FAILED: %s\n", infoLog);
-                    break;
-                }
-                case GL_FRAGMENT_SHADER: {
-                    fprintf(stderr, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n", infoLog);
-                    break;
-                }
-                default: {
-                    fprintf(stderr, "ERROR::SHADER::UNKNOWN::COMPILATION_FAILED: %s\n", infoLog);
-                    break;
-                }
-            }
-            exit(-1);
-        }
-
-        return shader;
+        stbi_image_free(data);
     }
 
-    bool link_program(GLuint vertexShader, GLuint fragmentShader)
-    {
-        GLint success;
-        char infoLog[512] = {0};
-
-        PROGRAM_ID = glCreateProgram();
-        glAttachShader(PROGRAM_ID, vertexShader);
-        glAttachShader(PROGRAM_ID, fragmentShader);
-
-        glLinkProgram(PROGRAM_ID);
-
-        glGetProgramiv(PROGRAM_ID, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(PROGRAM_ID, 512, nullptr, infoLog);
-            fprintf(stderr, "ERROR::SHADER::PROGRAM::LINKING_FAILED: %s\n", infoLog);
-            return false;
-        }
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        return true;
-    }
-}
-
-namespace Buffers {
-    enum Attributes {
-        POSITION_ATTRIBUTES,
-        COLOR_ATTRIBUTES,
-    };
-
-    GLuint vao = 0, vbo = 0;
-
-    struct Vertex {
-    [[maybe_unused]]    float x, y;
-    [[maybe_unused]]    float r, g, b;
-    };
-
-    constexpr const int verticesCap = Window::maxWidth * Window::maxHeight;
-    Vertex vertices[verticesCap];
-    size_t verticesCount = 0;
-
-    void init_buffers() {
-        glGenVertexArrays(1,&vao);
-        glBindVertexArray(vao);
-
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        //describing the data to opengl
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
-        glEnableVertexAttribArray(POSITION_ATTRIBUTES);
-        glVertexAttribPointer(POSITION_ATTRIBUTES,
-                              2,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              (2 + 3) * sizeof(float),
-                              reinterpret_cast<GLvoid*>(0));
-
-        //glVertexAttribDivisor(POSITION_ATTRIBUTES, 1);
-
-        glEnableVertexAttribArray(COLOR_ATTRIBUTES);
-        glVertexAttribPointer(COLOR_ATTRIBUTES,
-                              3,
-                              GL_FLOAT,
-                              GL_FALSE,
-                              (2 + 3) * sizeof(float),
-                              reinterpret_cast<GLvoid*>(sizeof(float)*2));
-
-        //glVertexAttribDivisor(COLOR_ATTRIBUTES, 1);
-    }
-
-    void push_vert(float x, float y, float r, float g, float b) {
-        assert(verticesCount < verticesCap && "Overflow in the VERTICES buffer!");
-        vertices[verticesCount].x = x;
-        vertices[verticesCount].y = y;
-        vertices[verticesCount].r = r;
-        vertices[verticesCount].g = g;
-        vertices[verticesCount].b = b;
-        ++verticesCount;
-    }
-
-    void clear_buff() {
-        verticesCount = 0;
-    }
-
-    void sync_buffers() {
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        glBufferSubData(GL_ARRAY_BUFFER,
-                        0,
-                        static_cast<GLsizeiptr>(verticesCount * sizeof (vertices[0])),
-                        vertices);
-
+    void bindTexture() {
+        glBindTexture(GL_TEXTURE_2D, texId);
     }
 
 }
@@ -213,8 +70,8 @@ void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int m
                 topRight = topLeft;
                 bottomLeft = {bottomLeft.first - impulse, bottomLeft.second};
                 topLeft = {topLeft.first - impulse, topLeft.second};
-                break;
             }
+            break;
         }
         case GLFW_KEY_RIGHT: {
             if (action == GLFW_PRESS) {
@@ -296,6 +153,10 @@ int main() {
     RESOLUTION_UNIFORM = glGetUniformLocation(PROGRAM_ID, "resolution");
     glUniform2f(RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
+    //prepare texture
+    Textures::createTexture();
+    Textures::bindTexture();
+
     //prepare buffers
     Buffers::init_buffers();
     Buffers::sync_buffers();
@@ -303,15 +164,17 @@ int main() {
     glClearColor(.0f, .0f,.0f,1.f);
     glViewport(width / 2 - Window::width  / 2,
                height / 2 - Window::height / 2, width,height);
+
     using namespace HanShip;
+
     while (!glfwWindowShouldClose(winPtr)) {
 
         Buffers::clear_buff();
 
-        Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f);
-        Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f);
-        Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f);
-        Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75f);
+        Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+        Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
+        Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
+        Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
         Buffers::sync_buffers();
 
         glClear(GL_COLOR_BUFFER_BIT);

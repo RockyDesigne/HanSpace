@@ -1,0 +1,13 @@
+//
+// Created by HORIA on 12.03.2024.
+//
+
+#ifndef HANSPACE_GLOBAL_VARIABLES_H
+#define HANSPACE_GLOBAL_VARIABLES_H
+
+#include "glad.h"
+
+GLuint PROGRAM_ID;
+GLint RESOLUTION_UNIFORM;
+
+#endif //HANSPACE_GLOBAL_VARIABLES_H
