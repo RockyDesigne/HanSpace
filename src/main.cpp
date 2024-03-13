@@ -9,6 +9,25 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+namespace Asteroids {
+    using COORDS = std::pair<float,float>;
+
+    constexpr int asteroidWidthFromCenter = 50;
+
+    COORDS bottomLeft = {Window::width/2 - asteroidWidthFromCenter,Window::height/2-asteroidWidthFromCenter};
+    COORDS bottomRight = {Window::width/2 + asteroidWidthFromCenter, Window::height/2-asteroidWidthFromCenter};
+    COORDS topLeft = {Window::width/2 - asteroidWidthFromCenter, Window::height/2+asteroidWidthFromCenter};
+    COORDS topRight = {Window::width/2 + asteroidWidthFromCenter, Window::height/2+asteroidWidthFromCenter};
+
+    void drawAsteroid() {
+        Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+        Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
+        Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
+        Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
+    }
+
+}
+
 namespace BackGround {
     using COORDS = std::pair<float,float>;
 
@@ -35,13 +54,18 @@ namespace BackGround {
 
 namespace Textures {
     int width, height, nrChannels;
-    GLuint shipTexId, backgroundTexId;
+    GLuint shipTexId, backgroundTexId, asteroidTexId;
 
     void createShipTexture() {
         unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\SpaceShipSmall.png)", &width, &height, &nrChannels, 0);
 
         glGenTextures(1, &shipTexId);
         glBindTexture(GL_TEXTURE_2D, shipTexId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         /*
@@ -59,7 +83,30 @@ namespace Textures {
         glGenTextures(1, &backgroundTexId);
         glBindTexture(GL_TEXTURE_2D, backgroundTexId);
 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+        glGenerateMipmap(GL_TEXTURE_2D); // this generates all the levels of the mipmap for the bound texture
+
+        stbi_image_free(data);
+    }
+
+    void createAsteroidTexture() {
+        unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\asteroid-big-0000.png)", &width, &height, &nrChannels, 0);
+
+        glGenTextures(1, &asteroidTexId);
+        glBindTexture(GL_TEXTURE_2D, asteroidTexId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
         glGenerateMipmap(GL_TEXTURE_2D); // this generates all the levels of the mipmap for the bound texture
 
@@ -69,23 +116,16 @@ namespace Textures {
     void bindShipTexture() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, shipTexId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
     void bindBackgroundTexture() {
-        /*
-         * TO DO
-         * no need to give the parameters like this every time, only once is enough
-         */
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, backgroundTexId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    void bindAsteroidTexture() {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, asteroidTexId);
     }
 
 }
@@ -217,10 +257,12 @@ int main() {
     //tell each sampler the unit it belongs to
     glUniform1i(glGetUniformLocation(PROGRAM_ID, "shipTexture"), 0);
     glUniform1i(glGetUniformLocation(PROGRAM_ID, "backgroundTexture"), 1);
+    glUniform1i(glGetUniformLocation(PROGRAM_ID, "asteroidTexture"), 2);
 
     //prepare texture
     Textures::createBackgroundTexture();
     Textures::createShipTexture();
+    Textures::createAsteroidTexture();
 
     //prepare buffers
     Buffers::init_buffers();
@@ -248,6 +290,7 @@ int main() {
             yOffset = 0.0f;
         glUniform1f(glGetUniformLocation(PROGRAM_ID, "yOffset"), yOffset);
         glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), false);
+        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useAsteroidTex"), false);
         Textures::bindBackgroundTexture();
         BackGround::drawBackground();
 
@@ -256,11 +299,22 @@ int main() {
                      4);
 
         glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), true);
+        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useAsteroidTex"), false);
         Textures::bindShipTexture();
         HanShip::drawShip();
 
         glDrawArrays(GL_TRIANGLE_STRIP,
                      4,
+                     4);
+
+        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), false);
+        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useAsteroidTex"), true);
+
+        Textures::bindAsteroidTexture();
+        Asteroids::drawAsteroid();
+
+        glDrawArrays(GL_TRIANGLE_STRIP,
+                     8,
                      4);
 
         Buffers::sync_buffers();
