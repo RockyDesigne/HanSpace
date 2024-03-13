@@ -236,10 +236,17 @@ int main() {
      * TO DO:
      * make a separate shader for drawing the ship and for the background, this is currently not at all optimized
      */
+
+    float yOffset = 0.0f;
+    float speed = 0.0025f;
+
     while (!glfwWindowShouldClose(winPtr)) {
         glClear(GL_COLOR_BUFFER_BIT);
         Buffers::clear_buff();
-
+        yOffset += speed;
+        if (yOffset > 1.0f)
+            yOffset = 0.0f;
+        glUniform1f(glGetUniformLocation(PROGRAM_ID, "yOffset"), yOffset);
         glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), false);
         Textures::bindBackgroundTexture();
         BackGround::drawBackground();

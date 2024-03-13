@@ -32,12 +32,13 @@ namespace Shaders {
                              "uniform sampler2D shipTexture;\n"
                              "uniform sampler2D backgroundTexture;\n"
                              "uniform bool useShipTex;\n"
+                             "uniform float yOffset;\n"
                              "void main() {\n"
                              "\n"
                              "if (useShipTex)\n"
                              "  outColor = texture(shipTexture, fragTexCoords);\n"
                              "else \n"
-                             "  outColor = texture(backgroundTexture, fragTexCoords);\n"
+                             "  outColor = texture(backgroundTexture, vec2(fragTexCoords.x,fragTexCoords.y+yOffset));\n"
                              "}\n";
 
     GLuint compile_shader(const char* shaderSource, GLenum shaderType)
