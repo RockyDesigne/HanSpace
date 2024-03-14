@@ -25,25 +25,32 @@ namespace Shaders {
                                "fragColor = vec4(color, 1.0f);\n"
                                "fragTexCoords = texCoords;\n"
                                "}\n";
-    const char* fragSource = "#version 460 core\n"
+    const char* shipShader = "#version 460 core\n"
                              "in vec4 fragColor;\n"
                              "in vec2 fragTexCoords;\n"
                              "out vec4 outColor;\n"
                              "uniform sampler2D shipTexture;\n"
-                             "uniform sampler2D backgroundTexture;\n"
-                             "uniform sampler2D asteroidTexture;\n"
-                             "uniform bool useShipTex;\n"
-                             "uniform bool useAsteroidTex;\n"
-                             "uniform float yOffset;\n"
                              "void main() {\n"
                              "\n"
-                             "if (useShipTex)\n"
                              "  outColor = texture(shipTexture, fragTexCoords);\n"
-                             "else if (useAsteroidTex)\n"
-                             "  outColor = texture(asteroidTexture, vec2(fragTexCoords.x,fragTexCoords.y));\n"
-                             "else \n"
-                             "  outColor = texture(backgroundTexture, vec2(fragTexCoords.x,fragTexCoords.y+yOffset));\n"
                              "}\n";
+
+    const char* backgroundShader = "#version 460 core\n"
+                                   "in vec2 fragTexCoords;\n"
+                                   "out vec4 outColor;\n"
+                                   "uniform sampler2D backgroundTexture;\n"
+                                   "uniform float yOffset;\n"
+                                   "void main() {\n"
+                                   "    outColor = texture(backgroundTexture, vec2(fragTexCoords.x,fragTexCoords.y + yOffset));\n"
+                                   "}\n";
+
+    const char* asteroidShader = "#version 460 core\n"
+                                 "in vec2 fragTexCoords;\n"
+                                 "out vec4 outColor;\n"
+                                 "uniform sampler2D asteroidTexture;\n"
+                                 "void main() {\n"
+                                 "    outColor = texture(asteroidTexture, vec2(fragTexCoords.x,fragTexCoords.y));\n"
+                                 "}\n";
 
     GLuint compile_shader(const char* shaderSource, GLenum shaderType)
     {
@@ -81,21 +88,21 @@ namespace Shaders {
         return shader;
     }
 
-    bool link_program(GLuint vertexShader, GLuint fragmentShader)
+    bool link_program(GLuint vertexShader, GLuint fragmentShader, GLuint& program)
     {
         GLint success;
         char infoLog[512] = {0};
 
-        PROGRAM_ID = glCreateProgram();
-        glAttachShader(PROGRAM_ID, vertexShader);
-        glAttachShader(PROGRAM_ID, fragmentShader);
+        program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, fragmentShader);
 
-        glLinkProgram(PROGRAM_ID);
+        glLinkProgram(program);
 
-        glGetProgramiv(PROGRAM_ID, GL_LINK_STATUS, &success);
+        glGetProgramiv(program, GL_LINK_STATUS, &success);
         if (!success)
         {
-            glGetProgramInfoLog(PROGRAM_ID, 512, nullptr, infoLog);
+            glGetProgramInfoLog(program, 512, nullptr, infoLog);
             fprintf(stderr, "ERROR::SHADER::PROGRAM::LINKING_FAILED: %s\n", infoLog);
             return false;
         }

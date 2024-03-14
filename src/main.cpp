@@ -119,12 +119,12 @@ namespace Textures {
     }
 
     void bindBackgroundTexture() {
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, backgroundTexId);
     }
 
     void bindAsteroidTexture() {
-        glActiveTexture(GL_TEXTURE2);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, asteroidTexId);
     }
 
@@ -194,7 +194,17 @@ void handleWindowResize(GLFWwindow* window, int width, int height) {
 
     glViewport(width / 2 - Window::width  / 2,
                height / 2 - Window::height / 2, width,height);
-    glUniform2f(RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+    /*
+     * When you try and set a uniform and it cant find it results in GL_INVALID_OPERATION error generated. Invalid component count error
+     */
+    glUseProgram(SHIP_PROGRAM);
+    glUniform2f(SHIP_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
+    glUseProgram(BACKGROUND_PROGRAM);
+    glUniform2f(BACKGROUND_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
+    glUseProgram(ASTEROID_PROGRAM);
+    glUniform2f(ASTEROID_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
     BackGround::calcBackground();
 }
@@ -247,21 +257,40 @@ int main() {
 
     //compile shaders
     GLuint vShaderId = Shaders::compile_shader(Shaders::vertexSource, GL_VERTEX_SHADER);
-    GLuint fragShaderId = Shaders::compile_shader(Shaders::fragSource,GL_FRAGMENT_SHADER);
-    Shaders::link_program(vShaderId, fragShaderId);
-    glUseProgram(PROGRAM_ID);
+    GLuint shipShaderId = Shaders::compile_shader(Shaders::shipShader,GL_FRAGMENT_SHADER);
+    GLuint asteroidShaderId = Shaders::compile_shader(Shaders::asteroidShader,GL_FRAGMENT_SHADER);
+    GLuint backgroundShaderId = Shaders::compile_shader(Shaders::backgroundShader,GL_FRAGMENT_SHADER);
 
-    RESOLUTION_UNIFORM = glGetUniformLocation(PROGRAM_ID, "resolution");
-    glUniform2f(RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+    //link ship
+    Shaders::link_program(vShaderId, shipShaderId, SHIP_PROGRAM);
+    glUseProgram(SHIP_PROGRAM);
 
-    //tell each sampler the unit it belongs to
-    glUniform1i(glGetUniformLocation(PROGRAM_ID, "shipTexture"), 0);
-    glUniform1i(glGetUniformLocation(PROGRAM_ID, "backgroundTexture"), 1);
-    glUniform1i(glGetUniformLocation(PROGRAM_ID, "asteroidTexture"), 2);
+    SHIP_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(SHIP_PROGRAM, "resolution");
+    glUniform2f(SHIP_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
-    //prepare texture
-    Textures::createBackgroundTexture();
     Textures::createShipTexture();
+
+    //link bkg
+    Shaders::link_program(vShaderId, backgroundShaderId, BACKGROUND_PROGRAM);
+    glUseProgram(BACKGROUND_PROGRAM);
+
+    //get resolution for bkg
+    BACKGROUND_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(BACKGROUND_PROGRAM, "resolution");
+    glUniform2f(BACKGROUND_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+    BACKGROUND_PROGRAM_YOFFSET = glGetUniformLocation(BACKGROUND_PROGRAM, "yOffset");
+
+    //glUniform1i(glGetUniformLocation(BACKGROUND_PROGRAM, "backgroundTexture"), 0);
+
+    Textures::createBackgroundTexture();
+
+    //link asteroid
+    Shaders::link_program(vShaderId, asteroidShaderId, ASTEROID_PROGRAM);
+    glUseProgram(ASTEROID_PROGRAM);
+
+    //get resolution for asteroid
+    ASTEROID_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(ASTEROID_PROGRAM, "resolution");
+    glUniform2f(ASTEROID_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
     Textures::createAsteroidTexture();
 
     //prepare buffers
@@ -274,23 +303,21 @@ int main() {
 
     using namespace HanShip;
 
-    /*
-     * TO DO:
-     * make a separate shader for drawing the ship and for the background, this is currently not at all optimized
-     */
-
     float yOffset = 0.0f;
     float speed = 0.0025f;
 
     while (!glfwWindowShouldClose(winPtr)) {
         glClear(GL_COLOR_BUFFER_BIT);
         Buffers::clear_buff();
+
         yOffset += speed;
-        if (yOffset > 1.0f)
+        if (yOffset > 1.0f) {
             yOffset = 0.0f;
-        glUniform1f(glGetUniformLocation(PROGRAM_ID, "yOffset"), yOffset);
-        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), false);
-        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useAsteroidTex"), false);
+        }
+
+        glUseProgram(BACKGROUND_PROGRAM);
+        glUniform1f(BACKGROUND_PROGRAM_YOFFSET, yOffset);
+
         Textures::bindBackgroundTexture();
         BackGround::drawBackground();
 
@@ -298,8 +325,7 @@ int main() {
                      0,
                      4);
 
-        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), true);
-        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useAsteroidTex"), false);
+        glUseProgram(SHIP_PROGRAM);
         Textures::bindShipTexture();
         HanShip::drawShip();
 
@@ -307,12 +333,10 @@ int main() {
                      4,
                      4);
 
-        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useShipTex"), false);
-        glUniform1i(glGetUniformLocation(PROGRAM_ID, "useAsteroidTex"), true);
 
+        glUseProgram(ASTEROID_PROGRAM);
         Textures::bindAsteroidTexture();
         Asteroids::drawAsteroid();
-
         glDrawArrays(GL_TRIANGLE_STRIP,
                      8,
                      4);
