@@ -22,28 +22,11 @@ namespace Asteroids {
     COORDS topLeft = {Window::width/2 - asteroidWidthFromCenter + offsetX, Window::height/2 + asteroidWidthFromCenter + offsetY};
     COORDS topRight = {Window::width/2 + asteroidWidthFromCenter + offsetX, Window::height/2 + asteroidWidthFromCenter + offsetY};
 
-    void resetCoords() {
-        bottomLeft = {Window::width/2 - asteroidWidthFromCenter + offsetX,Window::height/2 - asteroidWidthFromCenter + offsetY};
-        bottomRight = {Window::width/2 + asteroidWidthFromCenter + offsetX, Window::height/2 - asteroidWidthFromCenter + offsetY};
-        topLeft = {Window::width/2 - asteroidWidthFromCenter + offsetX, Window::height/2 + asteroidWidthFromCenter + offsetY};
-        topRight = {Window::width/2 + asteroidWidthFromCenter + offsetX, Window::height/2 + asteroidWidthFromCenter + offsetY};
-    }
-
-    void updateCalcCoords(float YOffSet) {
-        if (bottomLeft.second - YOffSet <= 0.0f) {
-            resetCoords();
-        }
-        topLeft = {topLeft.first, topLeft.second - YOffSet};
-        topRight = {topRight.first, topRight.second - YOffSet};
-        bottomLeft = {bottomLeft.first, bottomLeft.second - YOffSet};
-        bottomRight = {bottomRight.first, bottomRight.second - YOffSet};
-    }
-
-    void drawAsteroid() {
-        Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
-        Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
-        Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
-        Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
+    void drawAsteroid(float XOffSet, float YOffSet) {
+        Buffers::push_vert(bottomLeft.first + XOffSet,bottomLeft.second - YOffSet, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+        Buffers::push_vert(bottomRight.first + XOffSet,bottomRight.second - YOffSet, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
+        Buffers::push_vert(topLeft.first + XOffSet,topLeft.second - YOffSet, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
+        Buffers::push_vert(topRight.first + XOffSet,topRight.second - YOffSet,1.0f, 0.5f,0.75, 1.0f, 1.0f);
     }
 
 }

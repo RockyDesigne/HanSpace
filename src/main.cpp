@@ -187,7 +187,10 @@ int main() {
     float speed = 0.0025f;
 
     float asteroidSpeed = 10.f;
+    float asteroidYOffset = 0.0f;
 
+    constexpr int maxAsteroids = 5;
+    constexpr int asteroidDist = 100;
     while (!glfwWindowShouldClose(winPtr)) {
         glClear(GL_COLOR_BUFFER_BIT);
         Buffers::clear_buff();
@@ -215,13 +218,21 @@ int main() {
                      4,
                      4);
 
+        asteroidYOffset += asteroidSpeed;
+        if (asteroidYOffset > (float) Window::height - Asteroids::asteroidWidthFromCenter) {
+            asteroidYOffset = 0.0f;
+        }
+
         glUseProgram(ASTEROID_PROGRAM);
         Textures::bindAsteroidTexture();
-        Asteroids::updateCalcCoords(asteroidSpeed);
-        Asteroids::drawAsteroid();
-        glDrawArrays(GL_TRIANGLE_STRIP,
-                     8,
-                     4);
+
+        for (int i = 1; i <= maxAsteroids; ++i) {
+            Asteroids::drawAsteroid((float) Asteroids::asteroidWidthFromCenter * 2 + (float) (i*asteroidDist),
+                                    0.0f);
+            glDrawArrays(GL_TRIANGLE_STRIP,
+                         4 + (4 * i),
+                         4);
+        }
 
         Buffers::sync_buffers();
 
