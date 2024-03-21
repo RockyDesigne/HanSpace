@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "Buffers.h"
 #include <utility>
+#include <vector>
 
 namespace HanShip {
     using COORDS = std::pair<float,float>;
@@ -17,13 +18,77 @@ namespace HanShip {
     COORDS topLeft = {Window::width/2-shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
     COORDS topRight = {Window::width/2+shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
 
-    void drawShip() {
+    int projectilesSize = 0;
 
+    struct Projectile {
+        COORDS bottomLeft;
+        COORDS bottomRight;
+        COORDS topLeft;
+        COORDS topRight;
+
+        void updatePos(float xOffset, float yOffset) {
+            bottomLeft = {
+                    bottomLeft.first + xOffset,
+                    bottomLeft.second + yOffset
+            };
+
+            bottomRight = {
+                    bottomRight.first + xOffset,
+                    bottomRight.second + yOffset
+            };
+
+            topLeft = {
+                    topLeft.first + xOffset,
+                    topLeft.second + yOffset
+            };
+
+            topRight = {
+                    topRight.first + xOffset,
+                    topRight.second + yOffset
+            };
+
+        }
+
+        void drawProjectile() const {
+            Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+            Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
+            Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
+            Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
+        }
+
+    };
+
+    void drawShip() {
         Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
         Buffers::push_vert(bottomRight.first,bottomRight.second, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
         Buffers::push_vert(topLeft.first,topLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
         Buffers::push_vert(topRight.first,topRight.second,1.0f, 0.5f,0.75, 1.0f, 1.0f);
 
+    }
+
+    constexpr int maxProjectiles = 1000;
+    Projectile projectiles[maxProjectiles];
+
+    void updateProjectiles() {
+        for (int i = 0; i < projectilesSize; ++i) {
+            projectiles[i].updatePos(0.0f, 10.0f);
+        }
+    }
+
+    void pewPew() {
+        //int nextFree = getNextFreeSlot();
+        assert(projectilesSize < maxProjectiles && "Too many projectiles!");
+        //printf("Next free slot: %d\n", nextFree);
+        projectiles[projectilesSize].bottomLeft = {HanShip::topLeft.first + 15, HanShip::topLeft.second};
+        projectiles[projectilesSize].bottomRight = {HanShip::topLeft.first + 20, HanShip::topLeft.second};
+        projectiles[projectilesSize].topLeft = {HanShip::topLeft.first + 15, HanShip::topLeft.second + 25};
+        projectiles[projectilesSize].topRight = {HanShip::topLeft.first + 20, HanShip::topLeft.second + 25};
+        ++projectilesSize;
+        projectiles[projectilesSize].bottomLeft = {HanShip::topRight.first - 15, HanShip::topRight.second};
+        projectiles[projectilesSize].bottomRight = {HanShip::topRight.first - 20, HanShip::topRight.second};
+        projectiles[projectilesSize].topLeft = {HanShip::topRight.first - 15, HanShip::topRight.second + 25};
+        projectiles[projectilesSize].topRight = {HanShip::topRight.first - 20, HanShip::topRight.second + 25};
+        ++projectilesSize;
     }
 
 }

@@ -57,6 +57,15 @@ void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int m
             }
             break;
         }
+
+        case GLFW_KEY_SPACE: {
+            if (action == GLFW_PRESS) {
+                HanShip::pewPew();
+                //printf("pewPew() called!\n");
+            }
+            break;
+        }
+
         default: {
             break;
         }
@@ -85,6 +94,9 @@ void handleWindowResize(GLFWwindow* window, int width, int height) {
 
     glUseProgram(ASTEROID_PROGRAM);
     glUniform2f(ASTEROID_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
+    glUseProgram(PROJECTILE_PROGRAM);
+    glUniform2f(PROJECTILE_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
     BackGround::calcBackground();
 }
@@ -140,6 +152,7 @@ int main() {
     GLuint shipShaderId = Shaders::compile_shader(Shaders::shipShader,GL_FRAGMENT_SHADER);
     GLuint asteroidShaderId = Shaders::compile_shader(Shaders::asteroidShader,GL_FRAGMENT_SHADER);
     GLuint backgroundShaderId = Shaders::compile_shader(Shaders::backgroundShader,GL_FRAGMENT_SHADER);
+    GLuint projectileShaderId = Shaders::compile_shader(Shaders::projectileShader,GL_FRAGMENT_SHADER);
 
     //link ship
     Shaders::link_program(vShaderId, shipShaderId, SHIP_PROGRAM);
@@ -173,6 +186,12 @@ int main() {
 
     Textures::createAsteroidTexture();
 
+    //link projectile
+    Shaders::link_program(vShaderId, projectileShaderId, PROJECTILE_PROGRAM);
+    glUseProgram(PROJECTILE_PROGRAM);
+    PROJECTILE_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(PROJECTILE_PROGRAM, "resolution");
+    glUniform2f(PROJECTILE_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
     //prepare buffers
     Buffers::init_buffers();
     Buffers::sync_buffers();
@@ -184,7 +203,7 @@ int main() {
     using namespace HanShip;
 
     float yOffset = 0.0f;
-    float speed = 0.0025f;
+    float speed = 0.25f;
 
     float asteroidSpeed = 10.f;
     float asteroidYOffset = 0.0f;
@@ -192,14 +211,38 @@ int main() {
     Asteroids::initAsteroids();
 
     constexpr int asteroidDist = 100;
+
+    double lastTime = glfwGetTime();
+    double timeStep = 1.0 / 60.0; // 60 updates per second
+    double accumulator = 0.0;
+
     while (!glfwWindowShouldClose(winPtr)) {
+        double currentTime = glfwGetTime();
+        double frameTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        accumulator += frameTime;
+
+        while (accumulator >= timeStep) {
+            // Game logic updates
+            yOffset += (float) (speed * timeStep);
+            if (yOffset > 1.0f) {
+                yOffset = 0.0f;
+            }
+
+            asteroidYOffset += asteroidSpeed * (float) timeStep;
+            if (asteroidYOffset > (float) Window::height - Asteroids::asteroidWidthFromCenter) {
+                asteroidYOffset = 0.0f;
+            }
+
+            HanShip::updateProjectiles();
+
+            accumulator -= timeStep;
+        }
+
+        // Rendering
         glClear(GL_COLOR_BUFFER_BIT);
         Buffers::clear_buff();
-
-        yOffset += speed;
-        if (yOffset > 1.0f) {
-            yOffset = 0.0f;
-        }
 
         glUseProgram(BACKGROUND_PROGRAM);
         glUniform1f(BACKGROUND_PROGRAM_YOFFSET, yOffset);
@@ -207,32 +250,27 @@ int main() {
         Textures::bindBackgroundTexture();
         BackGround::drawBackground();
 
-        glDrawArrays(GL_TRIANGLE_STRIP,
-                     0,
-                     4);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         glUseProgram(SHIP_PROGRAM);
         Textures::bindShipTexture();
         HanShip::drawShip();
 
-        glDrawArrays(GL_TRIANGLE_STRIP,
-                     4,
-                     4);
-
-        asteroidYOffset += asteroidSpeed;
-        if (asteroidYOffset > (float) Window::height - Asteroids::asteroidWidthFromCenter) {
-            asteroidYOffset = 0.0f;
-        }
+        glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
 
         glUseProgram(ASTEROID_PROGRAM);
         Textures::bindAsteroidTexture();
 
         for (int i = 0; i < Asteroids::maxAsteroids; ++i) {
-            Asteroids::asteroids[i].drawAsteroid((float) ((i+1)*asteroidDist),
-                                    0.0f);
-            glDrawArrays(GL_TRIANGLE_STRIP,
-                         4 + (4 * (i+1)),
-                         4);
+            Asteroids::asteroids[i].drawAsteroid((float) ((i+1)*asteroidDist), 0.0f);
+            glDrawArrays(GL_TRIANGLE_STRIP, 4 + (4 * (i+1)), 4);
+        }
+
+        glUseProgram(PROJECTILE_PROGRAM);
+
+        for (int i = 0; i < projectilesSize; ++i) {
+            HanShip::projectiles[i].drawProjectile();
+            glDrawArrays(GL_TRIANGLE_STRIP, 24 + (4 * (i+1)), 4);
         }
 
         Buffers::sync_buffers();

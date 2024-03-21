@@ -33,6 +33,7 @@ namespace Buffers {
         glBindVertexArray(vao);
 
         glGenBuffers(1, &vbo);
+
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         //describing the data to opengl
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);

@@ -52,6 +52,14 @@ namespace Shaders {
                                  "    outColor = texture(asteroidTexture, vec2(fragTexCoords.x,fragTexCoords.y));\n"
                                  "}\n";
 
+    const char* projectileShader = "#version 460 core\n"
+                                   "in vec2 fragTexCoords;\n"
+                                   "in vec4 fragColor;\n"
+                                   "out vec4 outColor;\n"
+                                   "void main() {\n"
+                                   "    outColor = fragColor;\n"
+                                   "}\n";
+
     GLuint compile_shader(const char* shaderSource, GLenum shaderType)
     {
         GLuint shader;
