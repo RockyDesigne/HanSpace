@@ -10,7 +10,6 @@
 #include "Randomization.h"
 #include <utility>
 #include <random>
-#include <list>
 
 namespace Asteroids {
 
@@ -29,11 +28,11 @@ namespace Asteroids {
         COORDS topRight;
         bool deleted = false;
 
-        void drawAsteroid(float XOffSet, float YOffSet) const {
-            Buffers::push_vert(bottomLeft.first + XOffSet,bottomLeft.second - YOffSet, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
-            Buffers::push_vert(bottomRight.first + XOffSet,bottomRight.second - YOffSet, 1.0f,0.5f,0.75f, 1.0f, 0.0f);
-            Buffers::push_vert(topLeft.first + XOffSet,topLeft.second - YOffSet, 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
-            Buffers::push_vert(topRight.first + XOffSet,topRight.second - YOffSet,1.0f, 0.5f,0.75, 1.0f, 1.0f);
+        void drawAsteroid() const {
+            Buffers::push_vert(bottomLeft.first ,bottomLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+            Buffers::push_vert(bottomRight.first ,bottomRight.second , 1.0f,0.5f,0.75f, 1.0f, 0.0f);
+            Buffers::push_vert(topLeft.first ,topLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
+            Buffers::push_vert(topRight.first ,topRight.second ,1.0f, 0.5f,0.75, 1.0f, 1.0f);
         }
 
     };
@@ -45,23 +44,24 @@ namespace Asteroids {
     COORDS topRight = {asteroidWidthFromCenter * 2 , Window::height + asteroidWidthFromCenter};
     */
 
-    constexpr int maxAsteroids = 5;
-
-    Asteroids::Asteroid asteroids[maxAsteroids];
-
-    void initAsteroids() {
-        for (auto & asteroid : asteroids) {
-            int randXOffset = Random::getRandNum(asteroidXdist);
-            asteroid = {
-                    .bottomLeft = {randXOffset,Window::height - asteroidWidthFromCenter},
-                    .bottomRight = {randXOffset + asteroidWidthFromCenter * 2, Window::height - asteroidWidthFromCenter},
-                    .topLeft = {randXOffset, Window::height + asteroidWidthFromCenter},
-                    .topRight = {randXOffset + asteroidWidthFromCenter * 2 , Window::height + asteroidWidthFromCenter}
-            };
+    constexpr int maxAsteroids = 1000;
+    int asteroidsSize = 0;
+    Asteroid asteroids[maxAsteroids];
+    void pushAsteroid(float xOffset, float yOffset);
+    void initAsteroids(int nr) {
+        for (int i = 0; i < nr; ++i) {
+            pushAsteroid((float) Random::getRandNum(asteroidXdist), 0.0f);
         }
     }
 
-
+    void pushAsteroid(float xOffset, float yOffset) {
+        assert(asteroidsSize < maxAsteroids && "Too many asteroids!");
+        asteroids[asteroidsSize].bottomLeft = {xOffset,(float)Window::height - asteroidWidthFromCenter + yOffset};
+        asteroids[asteroidsSize].bottomRight = {xOffset + asteroidWidthFromCenter * 2, (float)Window::height - asteroidWidthFromCenter + yOffset};
+        asteroids[asteroidsSize].topLeft = {xOffset, (float) Window::height + asteroidWidthFromCenter + yOffset};
+        asteroids[asteroidsSize].topRight = {xOffset + asteroidWidthFromCenter * 2 , (float) Window::height + asteroidWidthFromCenter + yOffset};
+        ++asteroidsSize;
+    }
 
 }
 

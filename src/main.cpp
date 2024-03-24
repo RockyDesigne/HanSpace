@@ -207,8 +207,9 @@ int main() {
 
     float asteroidSpeed = 10.f;
     float asteroidYOffset = 0.0f;
+    constexpr int maxAsteroidsPerFrame = 5;
 
-    Asteroids::initAsteroids();
+    Asteroids::initAsteroids(maxAsteroidsPerFrame);
 
     //constexpr int asteroidDist = 100;
 
@@ -216,6 +217,7 @@ int main() {
     double timeStep = 1.0 / 60.0; // 60 updates per second
     double accumulator = 0.0;
 
+    glfwSwapInterval(1);
     while (!glfwWindowShouldClose(winPtr)) {
         double currentTime = glfwGetTime();
         double frameTime = currentTime - lastTime;
@@ -233,6 +235,25 @@ int main() {
             asteroidYOffset += asteroidSpeed * (float) timeStep;
             if (asteroidYOffset > (float) Window::height - Asteroids::asteroidWidthFromCenter) {
                 asteroidYOffset = 0.0f;
+            }
+
+            //collision checks
+
+            for (auto & asteroid : Asteroids::asteroids) {
+                if (!asteroid.deleted && HanShip::checkCollisionWithShip(asteroid)) {
+                    asteroid.deleted = true;
+                }
+            }
+
+            for (auto& projectile : HanShip::projectiles) {
+                if (!projectile.deleted) {
+                    for (auto &asteroid: Asteroids::asteroids) {
+                        if (!asteroid.deleted && checkCollisionWithProjectile(asteroid, projectile)) {
+                            asteroid.deleted = true;
+                            projectile.deleted = true;
+                        }
+                    }
+                }
             }
 
             HanShip::updateProjectiles();
@@ -261,10 +282,11 @@ int main() {
         glUseProgram(ASTEROID_PROGRAM);
         Textures::bindAsteroidTexture();
 
-        for (auto & asteroid : Asteroids::asteroids) {
-            asteroid.drawAsteroid(0.0f, 0.0f);
-            if (!asteroid.deleted)
-                glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+        for (const auto& asteroid : Asteroids::asteroids) {
+            if (!asteroid.deleted) {
+                asteroid.drawAsteroid();
+                glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
+            }
         }
 
         glUseProgram(PROJECTILE_PROGRAM);
@@ -276,23 +298,7 @@ int main() {
             }
         }
 
-        //collision checks
-
-        for (auto & asteroid : Asteroids::asteroids) {
-            if (HanShip::checkCollisionWithShip(asteroid)) {
-                asteroid.deleted = true;
-            }
-        }
-
-        for (auto& projectile : HanShip::projectiles) {
-            for (auto & asteroid : Asteroids::asteroids) {
-                if (checkCollisionWithProjectile(asteroid, projectile)) {
-                    asteroid.deleted = true;
-                    projectile.deleted = true;
-                }
-            }
-        }
-
+        //Asteroids::updateAsteroids();
         Buffers::sync_buffers();
 
         glfwSwapBuffers(winPtr);
