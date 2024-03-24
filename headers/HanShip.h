@@ -7,8 +7,8 @@
 
 #include "Window.h"
 #include "Buffers.h"
+#include "Asteroids.h"
 #include <utility>
-#include <vector>
 
 namespace HanShip {
     using COORDS = std::pair<float,float>;
@@ -18,6 +18,26 @@ namespace HanShip {
     COORDS topLeft = {Window::width/2-shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
     COORDS topRight = {Window::width/2+shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
 
+    bool checkCollisionWithShip(const Asteroids::Asteroid& asteroid) {
+        // Define the ship's bounding box
+        float shipLeft = HanShip::topLeft.first;
+        float shipRight = HanShip::topRight.first;
+        float shipTop = HanShip::topLeft.second;
+        float shipBottom = HanShip::bottomLeft.second;
+
+        // Define the asteroid's bounding box
+        float asteroidLeft = asteroid.bottomLeft.first;
+        float asteroidRight = asteroid.bottomRight.first;
+        float asteroidTop = asteroid.topLeft.second;
+        float asteroidBottom = asteroid.bottomLeft.second;
+
+        // Check for collision using AABB method
+        bool collisionX = shipLeft < asteroidRight && shipRight > asteroidLeft;
+        bool collisionY = shipTop > asteroidBottom && shipBottom < asteroidTop;
+
+        return collisionX && collisionY;
+    }
+
     int projectilesSize = 0;
 
     struct Projectile {
@@ -25,6 +45,8 @@ namespace HanShip {
         COORDS bottomRight;
         COORDS topLeft;
         COORDS topRight;
+
+        bool deleted = false;
 
         void updatePos(float xOffset, float yOffset) {
             bottomLeft = {
@@ -57,6 +79,26 @@ namespace HanShip {
         }
 
     };
+
+    bool checkCollisionWithProjectile(const Asteroids::Asteroid& asteroid, const Projectile& projectile) {
+        // Define the ship's bounding box
+        float projectileLeft = projectile.topLeft.first;
+        float projectileRight = projectile.topRight.first;
+        float projectileTop = projectile.topLeft.second;
+        float projectileBottom = projectile.bottomLeft.second;
+
+        // Define the asteroid's bounding box
+        float asteroidLeft = asteroid.bottomLeft.first;
+        float asteroidRight = asteroid.bottomRight.first;
+        float asteroidTop = asteroid.topLeft.second;
+        float asteroidBottom = asteroid.bottomLeft.second;
+
+        // Check for collision using AABB method
+        bool collisionX = projectileLeft < asteroidRight && projectileRight > asteroidLeft;
+        bool collisionY = projectileTop > asteroidBottom && projectileBottom < asteroidTop;
+
+        return collisionX && collisionY;
+    }
 
     void drawShip() {
         Buffers::push_vert(bottomLeft.first,bottomLeft.second, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);

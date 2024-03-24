@@ -10,6 +10,7 @@
 #include "Randomization.h"
 #include <utility>
 #include <random>
+#include <list>
 
 namespace Asteroids {
 
@@ -26,6 +27,7 @@ namespace Asteroids {
         COORDS bottomRight;
         COORDS topLeft;
         COORDS topRight;
+        bool deleted = false;
 
         void drawAsteroid(float XOffSet, float YOffSet) const {
             Buffers::push_vert(bottomLeft.first + XOffSet,bottomLeft.second - YOffSet, 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
@@ -58,6 +60,8 @@ namespace Asteroids {
             };
         }
     }
+
+
 
 }
 

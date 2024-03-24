@@ -210,7 +210,7 @@ int main() {
 
     Asteroids::initAsteroids();
 
-    constexpr int asteroidDist = 100;
+    //constexpr int asteroidDist = 100;
 
     double lastTime = glfwGetTime();
     double timeStep = 1.0 / 60.0; // 60 updates per second
@@ -224,7 +224,7 @@ int main() {
         accumulator += frameTime;
 
         while (accumulator >= timeStep) {
-            // Game logic updates
+            // game state update
             yOffset += (float) (speed * timeStep);
             if (yOffset > 1.0f) {
                 yOffset = 0.0f;
@@ -256,21 +256,41 @@ int main() {
         Textures::bindShipTexture();
         HanShip::drawShip();
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+        glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
 
         glUseProgram(ASTEROID_PROGRAM);
         Textures::bindAsteroidTexture();
 
-        for (int i = 0; i < Asteroids::maxAsteroids; ++i) {
-            Asteroids::asteroids[i].drawAsteroid((float) ((i+1)*asteroidDist), 0.0f);
-            glDrawArrays(GL_TRIANGLE_STRIP, 4 + (4 * (i+1)), 4);
+        for (auto & asteroid : Asteroids::asteroids) {
+            asteroid.drawAsteroid(0.0f, 0.0f);
+            if (!asteroid.deleted)
+                glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
         }
 
         glUseProgram(PROJECTILE_PROGRAM);
 
-        for (int i = 0; i < projectilesSize; ++i) {
-            HanShip::projectiles[i].drawProjectile();
-            glDrawArrays(GL_TRIANGLE_STRIP, 24 + (4 * (i+1)), 4);
+        for (const auto& projectile : HanShip::projectiles) {
+            if (!projectile.deleted) {
+                projectile.drawProjectile();
+                glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
+            }
+        }
+
+        //collision checks
+
+        for (auto & asteroid : Asteroids::asteroids) {
+            if (HanShip::checkCollisionWithShip(asteroid)) {
+                asteroid.deleted = true;
+            }
+        }
+
+        for (auto& projectile : HanShip::projectiles) {
+            for (auto & asteroid : Asteroids::asteroids) {
+                if (checkCollisionWithProjectile(asteroid, projectile)) {
+                    asteroid.deleted = true;
+                    projectile.deleted = true;
+                }
+            }
         }
 
         Buffers::sync_buffers();
