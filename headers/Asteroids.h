@@ -10,6 +10,7 @@
 #include "Randomization.h"
 #include <utility>
 #include <random>
+#include <algorithm>
 
 namespace Asteroids {
 
@@ -18,7 +19,7 @@ namespace Asteroids {
     constexpr int asteroidWidthFromCenter = 50;
 
     std::uniform_int_distribution asteroidXdist {0,
-                                                 Window::width - asteroidWidthFromCenter * 2};
+                                                 Window::maxWidth - asteroidWidthFromCenter * 2};
 
     struct Asteroid {
 
@@ -27,6 +28,28 @@ namespace Asteroids {
         COORDS topLeft;
         COORDS topRight;
         bool deleted = false;
+
+        void updatePos(float xOffset, float yOffset) {
+            bottomLeft = {
+                    bottomLeft.first + xOffset,
+                    bottomLeft.second + yOffset
+            };
+
+            bottomRight = {
+                    bottomRight.first + xOffset,
+                    bottomRight.second + yOffset
+            };
+
+            topLeft = {
+                    topLeft.first + xOffset,
+                    topLeft.second + yOffset
+            };
+
+            topRight = {
+                    topRight.first + xOffset,
+                    topRight.second + yOffset
+            };
+        }
 
         void drawAsteroid() const {
             Buffers::push_vert(bottomLeft.first ,bottomLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
@@ -48,9 +71,16 @@ namespace Asteroids {
     int asteroidsSize = 0;
     Asteroid asteroids[maxAsteroids];
     void pushAsteroid(float xOffset, float yOffset);
-    void initAsteroids(int nr) {
+    void makeRandAsteroids(int nr) {
         for (int i = 0; i < nr; ++i) {
-            pushAsteroid((float) Random::getRandNum(asteroidXdist), 0.0f);
+            pushAsteroid((float) std::clamp(Random::getRandNum(asteroidXdist), 0, Window::width - asteroidWidthFromCenter * 2),
+                         0.0f);
+        }
+    }
+
+    void updateAsteroids() {
+        for (int i = 0; i < asteroidsSize; ++i) {
+            asteroids[i].updatePos(0.0f, -2.0f);
         }
     }
 

@@ -205,17 +205,11 @@ int main() {
     float yOffset = 0.0f;
     float speed = 0.25f;
 
-    float asteroidSpeed = 10.f;
-    float asteroidYOffset = 0.0f;
-    constexpr int maxAsteroidsPerFrame = 5;
-
-    Asteroids::initAsteroids(maxAsteroidsPerFrame);
-
-    //constexpr int asteroidDist = 100;
-
     double lastTime = glfwGetTime();
-    double timeStep = 1.0 / 60.0; // 60 updates per second
+    constexpr double timeStep = 1.0 / 60.0; // 60 updates per second
     double accumulator = 0.0;
+    constexpr double asteroidTime = 50.0;
+    double timeToNextAsteroid = asteroidTime;
 
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(winPtr)) {
@@ -227,35 +221,37 @@ int main() {
 
         while (accumulator >= timeStep) {
             // game state update
+
+            timeToNextAsteroid -= 1.0;
+            if (timeToNextAsteroid <= 0.0) {
+                Asteroids::makeRandAsteroids(1);
+                timeToNextAsteroid = asteroidTime;
+            }
+
             yOffset += (float) (speed * timeStep);
             if (yOffset > 1.0f) {
                 yOffset = 0.0f;
             }
 
-            asteroidYOffset += asteroidSpeed * (float) timeStep;
-            if (asteroidYOffset > (float) Window::height - Asteroids::asteroidWidthFromCenter) {
-                asteroidYOffset = 0.0f;
-            }
-
             //collision checks
-
-            for (auto & asteroid : Asteroids::asteroids) {
-                if (!asteroid.deleted && HanShip::checkCollisionWithShip(asteroid)) {
-                    asteroid.deleted = true;
+            for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
+                if (!Asteroids::asteroids[i].deleted && HanShip::checkCollisionWithShip(Asteroids::asteroids[i])) {
+                    Asteroids::asteroids[i].deleted = true;
                 }
             }
 
-            for (auto& projectile : HanShip::projectiles) {
-                if (!projectile.deleted) {
-                    for (auto &asteroid: Asteroids::asteroids) {
-                        if (!asteroid.deleted && checkCollisionWithProjectile(asteroid, projectile)) {
-                            asteroid.deleted = true;
-                            projectile.deleted = true;
+            for (int i = 0; i < HanShip::projectilesSize; ++i) {
+                if (!HanShip::projectiles[i].deleted) {
+                    for (int j = 0; j < Asteroids::asteroidsSize; ++j) {
+                        if (!Asteroids::asteroids[j].deleted && checkCollisionWithProjectile(Asteroids::asteroids[j], HanShip::projectiles[i])) {
+                            Asteroids::asteroids[j].deleted = true;
+                            HanShip::projectiles[i].deleted = true;
                         }
                     }
                 }
             }
 
+            Asteroids::updateAsteroids();
             HanShip::updateProjectiles();
 
             accumulator -= timeStep;
