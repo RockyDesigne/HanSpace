@@ -80,16 +80,22 @@ namespace Asteroids {
 
     void updateAsteroids() {
         for (int i = 0; i < asteroidsSize; ++i) {
-            asteroids[i].updatePos(0.0f, -2.0f);
+            if (!asteroids[i].deleted)
+                asteroids[i].updatePos(0.0f, -2.0f);
         }
     }
 
     void pushAsteroid(float xOffset, float yOffset) {
-        assert(asteroidsSize < maxAsteroids && "Too many asteroids!");
+        if (asteroidsSize >= maxAsteroids) {
+            for (auto& asteroid : asteroids)
+                asteroid.deleted = true;
+            asteroidsSize = 0;
+        }
         asteroids[asteroidsSize].bottomLeft = {xOffset,(float)Window::height - asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].bottomRight = {xOffset + asteroidWidthFromCenter * 2, (float)Window::height - asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].topLeft = {xOffset, (float) Window::height + asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].topRight = {xOffset + asteroidWidthFromCenter * 2 , (float) Window::height + asteroidWidthFromCenter + yOffset};
+        asteroids[asteroidsSize].deleted = false;
         ++asteroidsSize;
     }
 

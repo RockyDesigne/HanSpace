@@ -6,6 +6,9 @@
 #define HANSPACE_TEXTURES_H
 
 #include "glad.h"
+#include "HanShipTexture.h"
+#include "HanBackgroundTexture.h"
+#include "HanAsteroidTexture.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -14,8 +17,7 @@ namespace Textures {
     GLuint shipTexId, backgroundTexId, asteroidTexId;
 
     void createShipTexture() {
-        unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\SpaceShipSmall.png)", &width, &height, &nrChannels, 0);
-
+        unsigned char *data = stbi_load_from_memory(HanShipTexture, (int)HanShipTextureLen, &width, &height, &nrChannels, 0);
         glGenTextures(1, &shipTexId);
         glBindTexture(GL_TEXTURE_2D, shipTexId);
 
@@ -35,7 +37,7 @@ namespace Textures {
     }
 
     void createBackgroundTexture() {
-        unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\seamless space.PNG)", &width, &height, &nrChannels, 0);
+        unsigned char *data = stbi_load_from_memory(HanBackground_png, (int) HanBackground_png_len,&width, &height, &nrChannels, 0);
 
         glGenTextures(1, &backgroundTexId);
         glBindTexture(GL_TEXTURE_2D, backgroundTexId);
@@ -53,7 +55,7 @@ namespace Textures {
     }
 
     void createAsteroidTexture() {
-        unsigned char *data = stbi_load(R"(G:\projects\repos\HanGames\HanSpace\textures\asteroid-big-0000.png)", &width, &height, &nrChannels, 0);
+        unsigned char *data = stbi_load_from_memory(HanAsteroid_png, (int) HanBackground_png_len, &width, &height, &nrChannels, 0);
 
         glGenTextures(1, &asteroidTexId);
         glBindTexture(GL_TEXTURE_2D, asteroidTexId);

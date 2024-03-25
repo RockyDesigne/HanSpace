@@ -113,23 +113,29 @@ namespace HanShip {
 
     void updateProjectiles() {
         for (int i = 0; i < projectilesSize; ++i) {
-            projectiles[i].updatePos(0.0f, 10.0f);
+            if (!projectiles[i].deleted)
+                projectiles[i].updatePos(0.0f, 10.0f);
         }
     }
 
     void pewPew() {
-        //int nextFree = getNextFreeSlot();
-        assert(projectilesSize < maxProjectiles && "Too many projectiles!");
-        //printf("Next free slot: %d\n", nextFree);
+        if (projectilesSize >= maxProjectiles) {
+            for (auto& projectile : projectiles) {
+                projectile.deleted = true;
+            }
+            projectilesSize = 0;
+        }
         projectiles[projectilesSize].bottomLeft = {HanShip::topLeft.first + 15, HanShip::topLeft.second};
         projectiles[projectilesSize].bottomRight = {HanShip::topLeft.first + 20, HanShip::topLeft.second};
         projectiles[projectilesSize].topLeft = {HanShip::topLeft.first + 15, HanShip::topLeft.second + 25};
         projectiles[projectilesSize].topRight = {HanShip::topLeft.first + 20, HanShip::topLeft.second + 25};
+        projectiles[projectilesSize].deleted = false;
         ++projectilesSize;
         projectiles[projectilesSize].bottomLeft = {HanShip::topRight.first - 15, HanShip::topRight.second};
         projectiles[projectilesSize].bottomRight = {HanShip::topRight.first - 20, HanShip::topRight.second};
         projectiles[projectilesSize].topLeft = {HanShip::topRight.first - 15, HanShip::topRight.second + 25};
         projectiles[projectilesSize].topRight = {HanShip::topRight.first - 20, HanShip::topRight.second + 25};
+        projectiles[projectilesSize].deleted = false;
         ++projectilesSize;
     }
 
