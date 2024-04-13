@@ -60,6 +60,21 @@ namespace Shaders {
                                    "    outColor = fragColor;\n"
                                    "}\n";
 
+    const char* textShader = "#version 460 core\n"
+                             "in vec4 fragColor;\n"
+                             "in vec2 fragTexCoords;\n"
+                             "out vec4 outColor;\n"
+                             "uniform sampler2D shipTexture;\n"
+                             "void main() {\n"
+                             "\n"
+                             "  float d = texture(shipTexture, fragTexCoords).r;\n"
+                             "  float aaf = fwidth(d);\n"
+                             "  float alpha = smoothstep(0.5-aaf, 0.5 + aaf, d);\n"
+                             "  outColor = vec4(fragColor.rgb, alpha);\n"
+                             "  //vec4 textureColor = texture(shipTexture, fragTexCoords);\n"
+                             "  //outColor = vec4(textureColor.r,textureColor.gb, textureColor.a);\n"
+                             "}\n";
+
     GLuint compile_shader(const char* shaderSource, GLenum shaderType)
     {
         GLuint shader;

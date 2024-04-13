@@ -8,7 +8,7 @@ include_directories(headers)
 
 set(HEADERS headers/glad.h headers/khrplatform.h headers/stb_image.h headers/HanShip.h headers/Window.h headers/Shaders.h headers/Global_Variables.h headers/Buffers.h headers/Background.h headers/Textures.h headers/HanBackgroundTexture.h headers/HanAsteroidTexture.h headers/HanShipTexture.h)
 
-set(SOURCES src/glad.c src/main.cpp headers/Asteroids.h headers/Randomization.h)
+set(SOURCES src/glad.c src/main.cpp headers/Asteroids.h headers/Randomization.h headers/stb_truetype.h headers/stb_image_write.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

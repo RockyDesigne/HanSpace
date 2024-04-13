@@ -9,6 +9,10 @@
 #include "Asteroids.h"
 #include "Background.h"
 #include "Textures.h"
+#define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
+#include "stb_truetype.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
     using namespace HanShip;
@@ -98,6 +102,9 @@ void handleWindowResize(GLFWwindow* window, int width, int height) {
     glUseProgram(PROJECTILE_PROGRAM);
     glUniform2f(PROJECTILE_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
+    glUseProgram(TEXT_PROGRAM);
+    glUniform2f(TEXT_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+
     BackGround::calcBackground();
 }
 
@@ -130,6 +137,101 @@ void initWindow() {
     gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
 }
 
+constexpr uint64_t bitmapWidth = 512;
+constexpr uint64_t bitmapHeight = 512;
+
+constexpr uint64_t fileSize = 50'000;
+unsigned char ttf_buffer[fileSize];
+unsigned char pixels[512 * 512];
+stbtt_bakedchar chardata[200];
+
+GLuint fontTexture;
+
+void my_stbtt_initfont()
+{
+    auto file = fopen(R"(G:\projects\repos\HanGames\HanSpace\font\LTSuperiorMono-Regular.otf)", "rb");
+    fread(ttf_buffer, 1, fileSize,
+          file);
+
+    fclose(file);
+
+    stbtt_fontinfo font;
+
+    auto offset = stbtt_GetFontOffsetForIndex(ttf_buffer,0);
+
+    stbtt_InitFont(&font, ttf_buffer, offset);
+
+    stbtt_BakeFontBitmap(ttf_buffer, 0, 64, pixels, 512, 512, 0, font.numGlyphs, chardata);
+
+    glGenTextures(1, &fontTexture);
+    glBindTexture(GL_TEXTURE_2D, fontTexture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmapWidth, bitmapHeight, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+}
+
+void bindFont() {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, fontTexture);
+}
+
+void drawGlyph(float x, float y, char c) {
+
+    stbtt_aligned_quad q = {};
+
+    stbtt_GetBakedQuad(reinterpret_cast<const stbtt_bakedchar*>(chardata),
+                       512,
+                       512,  // same data as above
+                       c,             // character to display
+                       &x,
+                       &y,   // pointers to current position in screen pixel space
+                       &q,      // output: quad to draw
+                       1);
+
+    float windowHeight = Window::height; // replace with actual function to get window height
+
+    // invert y coordinates
+    q.y0 = windowHeight - q.y0;
+    q.y1 = windowHeight - q.y1;
+
+    Buffers::push_vert(q.x0,q.y0, 1.0f, 0.5f,0.75f, q.s0,q.t0);
+    Buffers::push_vert(q.x1,q.y0, 1.0f,0.5f,0.75f, q.s1,q.t0);
+    Buffers::push_vert(q.x0,q.y1, 1.0f, 0.5f,0.75f, q.s0,q.t1);
+    Buffers::push_vert(q.x1,q.y1,1.0f, 0.5f,0.75, q.s1,q.t1);
+}
+
+/*
+int main() {
+    fread(ttf_buffer, 1, fileSize,
+          fopen(R"(G:\projects\repos\HanGames\HanSpace\font\LTSuperiorMono-Regular.otf)", "rb"));
+
+    stbtt_fontinfo font;
+
+    stbtt_InitFont(&font, ttf_buffer, 0);
+
+    stbtt_BakeFontBitmap(ttf_buffer, 0, 64.0f, pixels, 512, 512, 32, 96, chardata);
+
+    if (!stbi_write_png("font.png", 512, 512, 1, pixels, 512)) {
+        throw std::runtime_error("Error writing file png!");
+    }
+
+}
+*/
+
+auto score = "Score: " + std::to_string(SCORE);
+char* text = score.data();
+int textLen = (int) strlen(text);
+
+void updateText() {
+    score = "Score: " + std::to_string(SCORE);
+    text = score.data();
+    textLen = (int) score.length();
+}
+
 int main() {
 
     initWindow();
@@ -153,6 +255,7 @@ int main() {
     GLuint asteroidShaderId = Shaders::compile_shader(Shaders::asteroidShader,GL_FRAGMENT_SHADER);
     GLuint backgroundShaderId = Shaders::compile_shader(Shaders::backgroundShader,GL_FRAGMENT_SHADER);
     GLuint projectileShaderId = Shaders::compile_shader(Shaders::projectileShader,GL_FRAGMENT_SHADER);
+    GLuint textShaderId = Shaders::compile_shader(Shaders::textShader, GL_FRAGMENT_SHADER);
 
     //link ship
     Shaders::link_program(vShaderId, shipShaderId, SHIP_PROGRAM);
@@ -192,6 +295,15 @@ int main() {
     PROJECTILE_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(PROJECTILE_PROGRAM, "resolution");
     glUniform2f(PROJECTILE_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
+    //link text
+    Shaders::link_program(vShaderId, textShaderId, TEXT_PROGRAM);
+    glUseProgram(TEXT_PROGRAM);
+    glUniform2f(TEXT_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
+    TEXT_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(TEXT_PROGRAM, "resolution");
+    glUniform1i(glGetUniformLocation(TEXT_PROGRAM, "glyphTexture"), 0);
+
+    my_stbtt_initfont();
+
     //prepare buffers
     Buffers::init_buffers();
     Buffers::sync_buffers();
@@ -211,8 +323,10 @@ int main() {
     constexpr double asteroidTime = 50.0;
     double timeToNextAsteroid = asteroidTime;
 
+    float letterSpace = 37.0f;
     glfwSwapInterval(1);
     while (!glfwWindowShouldClose(winPtr)) {
+
         double currentTime = glfwGetTime();
         double frameTime = currentTime - lastTime;
         lastTime = currentTime;
@@ -246,6 +360,7 @@ int main() {
                         if (!Asteroids::asteroids[j].deleted && checkCollisionWithProjectile(Asteroids::asteroids[j], HanShip::projectiles[i])) {
                             Asteroids::asteroids[j].deleted = true;
                             HanShip::projectiles[i].deleted = true;
+                            ++SCORE;
                         }
                     }
                 }
@@ -253,6 +368,7 @@ int main() {
 
             Asteroids::updateAsteroids();
             HanShip::updateProjectiles();
+            updateText();
 
             accumulator -= timeStep;
         }
@@ -292,6 +408,13 @@ int main() {
                 projectile.drawProjectile();
                 glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
             }
+        }
+
+        glUseProgram(TEXT_PROGRAM);
+        bindFont();
+        for (int i = 0; i < textLen; ++i) {
+            drawGlyph(10 + (letterSpace*i), 60, text[i]);
+            glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
         }
 
         //Asteroids::updateAsteroids();
