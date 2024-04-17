@@ -27,6 +27,11 @@ namespace Asteroids {
         COORDS bottomRight;
         COORDS topLeft;
         COORDS topRight;
+        int spriteFrameDuration = 5;
+        int spriteCurrFrame = 0;
+        int frameCounter = 0;
+        static int maxFrames;
+        //bool animationActive = false;
         bool deleted = false;
 
         void updatePos(float xOffset, float yOffset) {
@@ -52,13 +57,26 @@ namespace Asteroids {
         }
 
         void drawAsteroid() const {
+
             Buffers::push_vert(bottomLeft.first ,bottomLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
             Buffers::push_vert(bottomRight.first ,bottomRight.second , 1.0f,0.5f,0.75f, 1.0f, 0.0f);
             Buffers::push_vert(topLeft.first ,topLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
             Buffers::push_vert(topRight.first ,topRight.second ,1.0f, 0.5f,0.75, 1.0f, 1.0f);
         }
 
+        void drawBoom() const {
+
+            float width = 1.0f / 5.0f; // width of one frame
+            Buffers::push_vert(bottomLeft.first, bottomLeft.second, 1.0f, 0.5f, 0.75f, width * (float) spriteCurrFrame, 0.0f);
+            Buffers::push_vert(bottomRight.first, bottomRight.second, 1.0f, 0.5f, 0.75f, width * (float) spriteCurrFrame + width, 0.0f);
+            Buffers::push_vert(topLeft.first, topLeft.second, 1.0f, 0.5f, 0.75f, width * (float) spriteCurrFrame, 1.0f);
+            Buffers::push_vert(topRight.first, topRight.second, 1.0f, 0.5f, 0.75, width * (float) spriteCurrFrame + width, 1.0f);
+
+        }
+
     };
+
+    int Asteroid::maxFrames = 5;
 
     /*
     COORDS bottomLeft = {0.0f,Window::height - asteroidWidthFromCenter};
@@ -82,6 +100,13 @@ namespace Asteroids {
         for (int i = 0; i < asteroidsSize; ++i) {
             if (!asteroids[i].deleted)
                 asteroids[i].updatePos(0.0f, -2.0f);
+            else if (asteroids[i].deleted && asteroids[i].spriteCurrFrame < Asteroid::maxFrames) {
+                ++asteroids[i].frameCounter;
+                if (asteroids[i].frameCounter > asteroids[i].spriteFrameDuration) {
+                    asteroids[i].frameCounter = 0;
+                    ++asteroids[i].spriteCurrFrame;
+                }
+            }
         }
     }
 

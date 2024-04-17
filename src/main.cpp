@@ -288,6 +288,13 @@ int main() {
     glUniform2f(ASTEROID_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
     Textures::createAsteroidTexture();
+    Textures::createBoomTexture();
+
+    glUniform1i(glGetUniformLocation(ASTEROID_PROGRAM, "asteroidTexture"), 0);
+    glUniform1i(glGetUniformLocation(ASTEROID_PROGRAM, "boomTexture"), 1);
+
+    ASTEROID_PROGRAM_DELETED_UNIFORM = glGetUniformLocation(ASTEROID_PROGRAM, "deleted");
+    glUniform1i(ASTEROID_PROGRAM_DELETED_UNIFORM, GL_FALSE);
 
     //link projectile
     Shaders::link_program(vShaderId, projectileShaderId, PROJECTILE_PROGRAM);
@@ -325,6 +332,15 @@ int main() {
 
     float letterSpace = 37.0f;
     glfwSwapInterval(1);
+
+    Asteroids::makeRandAsteroids(1);
+
+    int spriteFrameDuration = 5;
+    int spriteCurrFrame = 0;
+    int frameCounter = 0;
+
+    glfwSwapInterval(1);
+
     while (!glfwWindowShouldClose(winPtr)) {
 
         double currentTime = glfwGetTime();
@@ -393,10 +409,15 @@ int main() {
 
         glUseProgram(ASTEROID_PROGRAM);
         Textures::bindAsteroidTexture();
+        Textures::bindBoomTexture();
 
         for (const auto& asteroid : Asteroids::asteroids) {
+            glUniform1i(ASTEROID_PROGRAM_DELETED_UNIFORM, asteroid.deleted);
             if (!asteroid.deleted) {
                 asteroid.drawAsteroid();
+                glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
+            } else if (asteroid.deleted && asteroid.spriteCurrFrame < Asteroids::Asteroid::maxFrames) {
+                asteroid.drawBoom();
                 glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
             }
         }
