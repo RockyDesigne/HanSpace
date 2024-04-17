@@ -10,12 +10,31 @@
 #include "HanBackgroundTexture.h"
 #include "HanAsteroidTexture.h"
 #include "BoomTexture.h"
+#include "ShipBoomTexture.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 namespace Textures {
     int width, height, nrChannels;
-    GLuint shipTexId, backgroundTexId, asteroidTexId, boomTexId;
+    GLuint shipTexId, backgroundTexId, asteroidTexId, boomTexId, shipBoomTexId;
+
+    void createShipBoomTexture() {
+        unsigned char *data = stbi_load_from_memory(ShipBoomPng, (int) ShipBoomPngLen, &width, &height, &nrChannels, 0);
+
+        glGenTextures(1, &shipBoomTexId);
+        glBindTexture(GL_TEXTURE_2D, shipBoomTexId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        glGenerateMipmap(GL_TEXTURE_2D); // this generates all the levels of the mipmap for the bound texture
+
+        stbi_image_free(data);
+    }
 
     void createBoomTexture() {
         unsigned char *data = stbi_load_from_memory(boomPng, (int) boomPngLen,&width, &height, &nrChannels, 0);
@@ -109,6 +128,11 @@ namespace Textures {
     void bindBoomTexture() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, boomTexId);
+    }
+
+    void bindShipBoomTexture() {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, shipBoomTexId);
     }
 
 }

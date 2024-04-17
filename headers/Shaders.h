@@ -25,6 +25,7 @@ namespace Shaders {
                                "fragColor = vec4(color, 1.0f);\n"
                                "fragTexCoords = texCoords;\n"
                                "}\n";
+
     const char* shipShader = "#version 460 core\n"
                              "in vec4 fragColor;\n"
                              "in vec2 fragTexCoords;\n"

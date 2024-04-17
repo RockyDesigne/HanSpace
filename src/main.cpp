@@ -265,6 +265,7 @@ int main() {
     glUniform2f(SHIP_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
     Textures::createShipTexture();
+    Textures::createShipBoomTexture();
 
     //link bkg
     Shaders::link_program(vShaderId, backgroundShaderId, BACKGROUND_PROGRAM);
@@ -333,14 +334,6 @@ int main() {
     float letterSpace = 37.0f;
     glfwSwapInterval(1);
 
-    Asteroids::makeRandAsteroids(1);
-
-    int spriteFrameDuration = 5;
-    int spriteCurrFrame = 0;
-    int frameCounter = 0;
-
-    glfwSwapInterval(1);
-
     while (!glfwWindowShouldClose(winPtr)) {
 
         double currentTime = glfwGetTime();
@@ -367,6 +360,7 @@ int main() {
             for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
                 if (!Asteroids::asteroids[i].deleted && HanShip::checkCollisionWithShip(Asteroids::asteroids[i])) {
                     Asteroids::asteroids[i].deleted = true;
+                    HanShip::deleted = true;
                 }
             }
 
@@ -384,6 +378,7 @@ int main() {
 
             Asteroids::updateAsteroids();
             HanShip::updateProjectiles();
+            HanShip::updateShip();
             updateText();
 
             accumulator -= timeStep;
@@ -402,8 +397,14 @@ int main() {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         glUseProgram(SHIP_PROGRAM);
-        Textures::bindShipTexture();
-        HanShip::drawShip();
+
+        if (!HanShip::deleted) {
+            Textures::bindShipTexture();
+            HanShip::drawShip();
+        } else {
+            Textures::bindShipBoomTexture();
+            HanShip::drawShipBoom();
+        }
 
         glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
 

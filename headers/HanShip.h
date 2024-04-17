@@ -18,6 +18,23 @@ namespace HanShip {
     COORDS topLeft = {Window::width/2-shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
     COORDS topRight = {Window::width/2+shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
 
+    int spriteFrameDuration = 2;
+    int spriteCurrFrame = 0;
+    int frameCounter = 0;
+    static int maxFrames = 64;
+    //bool animationActive = false;
+    bool deleted = false;
+
+    void updateShip() {
+        if (HanShip::deleted && spriteCurrFrame < HanShip::maxFrames) {
+            ++HanShip::frameCounter;
+            if (HanShip::frameCounter > HanShip::spriteFrameDuration) {
+                HanShip::frameCounter = 0;
+                ++HanShip::spriteCurrFrame;
+            }
+        }
+    }
+
     bool checkCollisionWithShip(const Asteroids::Asteroid& asteroid) {
         // Define the ship's bounding box
         float shipLeft = HanShip::topLeft.first;
@@ -98,6 +115,18 @@ namespace HanShip {
         bool collisionY = projectileTop > asteroidBottom && projectileBottom < asteroidTop;
 
         return collisionX && collisionY;
+    }
+
+    void drawShipBoom() {
+        float width = 1.0f / 8.0f;
+
+        auto tex_x = (float) (HanShip::spriteCurrFrame % 8);
+        auto tex_y = (float) (HanShip::spriteCurrFrame / 8);
+
+        Buffers::push_vert(bottomLeft.first, bottomLeft.second, 1.0f, 0.5f, 0.75f, width * tex_x, width * tex_y);
+        Buffers::push_vert(bottomRight.first, bottomRight.second, 1.0f, 0.5f, 0.75f, width * (tex_x + 1), width * tex_y);
+        Buffers::push_vert(topLeft.first, topLeft.second, 1.0f, 0.5f, 0.75f, width * tex_x, width * (tex_y + 1));
+        Buffers::push_vert(topRight.first, topRight.second, 1.0f, 0.5f, 0.75f, width * (tex_x + 1), width * (tex_y + 1));
     }
 
     void drawShip() {
