@@ -14,66 +14,19 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+auto lastUpState = GLFW_RELEASE;
+
 void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
     using namespace HanShip;
     (void) scancode;
     (void) mods;
-    float impulse = 100.f;
-    switch (key) {
-        case GLFW_KEY_ESCAPE: {
-            if (action == GLFW_PRESS)
-                glfwSetWindowShouldClose(window, true);
-            break;
-        }
-        case GLFW_KEY_UP: {
-            if (action == GLFW_PRESS) {
-                bottomLeft = topLeft;
-                bottomRight = topRight;
-                topLeft = {topLeft.first, topLeft.second + impulse};
-                topRight = {topRight.first, topRight.second + impulse};
+        switch (key) {
+            case GLFW_KEY_ESCAPE: {
+                if (action == GLFW_PRESS)
+                    glfwSetWindowShouldClose(window, true);
+                break;
             }
-            break;
         }
-        case GLFW_KEY_DOWN: {
-            if (action == GLFW_PRESS) {
-                topLeft = bottomLeft;
-                topRight = bottomRight;
-                bottomLeft = {bottomLeft.first, bottomLeft.second - impulse};
-                bottomRight = {bottomRight.first, bottomRight.second - impulse};
-            }
-            break;
-        }
-        case GLFW_KEY_LEFT: {
-            if (action == GLFW_PRESS) {
-                bottomRight = bottomLeft;
-                topRight = topLeft;
-                bottomLeft = {bottomLeft.first - impulse, bottomLeft.second};
-                topLeft = {topLeft.first - impulse, topLeft.second};
-            }
-            break;
-        }
-        case GLFW_KEY_RIGHT: {
-            if (action == GLFW_PRESS) {
-                bottomLeft = bottomRight;
-                topLeft = topRight;
-                bottomRight = {bottomRight.first + impulse, bottomRight.second};
-                topRight = {topRight.first + impulse, topRight.second};
-            }
-            break;
-        }
-
-        case GLFW_KEY_SPACE: {
-            if (action == GLFW_PRESS) {
-                HanShip::pewPew();
-                //printf("pewPew() called!\n");
-            }
-            break;
-        }
-
-        default: {
-            break;
-        }
-    }
 }
 
 void handleWindowResize(GLFWwindow* window, int width, int height) {
@@ -331,6 +284,9 @@ int main() {
     constexpr double asteroidTime = 50.0;
     double timeToNextAsteroid = asteroidTime;
 
+    const char* gameOverText = "Game Over!";
+    const int gameOverTextLen = strlen(gameOverText);
+
     float letterSpace = 37.0f;
     glfwSwapInterval(1);
 
@@ -345,42 +301,45 @@ int main() {
         while (accumulator >= timeStep) {
             // game state update
 
-            timeToNextAsteroid -= 1.0;
-            if (timeToNextAsteroid <= 0.0) {
-                Asteroids::makeRandAsteroids(1);
-                timeToNextAsteroid = asteroidTime;
-            }
+            if (!GAME_OVER) {
 
-            yOffset += (float) (speed * timeStep);
-            if (yOffset > 1.0f) {
-                yOffset = 0.0f;
-            }
-
-            //collision checks
-            for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
-                if (!Asteroids::asteroids[i].deleted && HanShip::checkCollisionWithShip(Asteroids::asteroids[i])) {
-                    Asteroids::asteroids[i].deleted = true;
-                    HanShip::deleted = true;
+                timeToNextAsteroid -= 1.0;
+                if (timeToNextAsteroid <= 0.0) {
+                    Asteroids::makeRandAsteroids(1);
+                    timeToNextAsteroid = asteroidTime;
                 }
-            }
 
-            for (int i = 0; i < HanShip::projectilesSize; ++i) {
-                if (!HanShip::projectiles[i].deleted) {
-                    for (int j = 0; j < Asteroids::asteroidsSize; ++j) {
-                        if (!Asteroids::asteroids[j].deleted && checkCollisionWithProjectile(Asteroids::asteroids[j], HanShip::projectiles[i])) {
-                            Asteroids::asteroids[j].deleted = true;
-                            HanShip::projectiles[i].deleted = true;
-                            ++SCORE;
+                yOffset += (float) (speed * timeStep);
+                if (yOffset > 1.0f) {
+                    yOffset = 0.0f;
+                }
+
+                //collision checks
+                for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
+                    if (!Asteroids::asteroids[i].deleted && HanShip::checkCollisionWithShip(Asteroids::asteroids[i])) {
+                        Asteroids::asteroids[i].deleted = true;
+                        HanShip::deleted = true;
+                        GAME_OVER = true;
+                    }
+                }
+
+                for (int i = 0; i < HanShip::projectilesSize; ++i) {
+                    if (!HanShip::projectiles[i].deleted) {
+                        for (int j = 0; j < Asteroids::asteroidsSize; ++j) {
+                            if (!Asteroids::asteroids[j].deleted &&
+                                checkCollisionWithProjectile(Asteroids::asteroids[j], HanShip::projectiles[i])) {
+                                Asteroids::asteroids[j].deleted = true;
+                                HanShip::projectiles[i].deleted = true;
+                                ++SCORE;
+                            }
                         }
                     }
                 }
+                updateText();
             }
-
             Asteroids::updateAsteroids();
             HanShip::updateProjectiles();
             HanShip::updateShip();
-            updateText();
-
             accumulator -= timeStep;
         }
 
@@ -437,6 +396,13 @@ int main() {
         for (int i = 0; i < textLen; ++i) {
             drawGlyph(10 + (letterSpace*i), 60, text[i]);
             glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+        }
+
+        if (GAME_OVER) {
+            for (int i = 0; i < gameOverTextLen; ++i) {
+                drawGlyph(Window::width/2 - (gameOverTextLen/3 * 60) + (letterSpace*i), Window::height/2 + 60, gameOverText[i]);
+                glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+            }
         }
 
         //Asteroids::updateAsteroids();

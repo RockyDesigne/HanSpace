@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "Buffers.h"
 #include "Asteroids.h"
+#include "Global_Variables.h"
 #include <utility>
 
 namespace HanShip {
@@ -19,20 +20,34 @@ namespace HanShip {
     COORDS topRight = {Window::width/2+shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
 
     int spriteFrameDuration = 2;
+    int fireCoolDown = 10;
+    int timeSinceLastShotFired = 0;
     int spriteCurrFrame = 0;
     int frameCounter = 0;
     static int maxFrames = 64;
     //bool animationActive = false;
     bool deleted = false;
 
-    void updateShip() {
-        if (HanShip::deleted && spriteCurrFrame < HanShip::maxFrames) {
-            ++HanShip::frameCounter;
-            if (HanShip::frameCounter > HanShip::spriteFrameDuration) {
-                HanShip::frameCounter = 0;
-                ++HanShip::spriteCurrFrame;
-            }
-        }
+    void moveShip(float xOffset, float yOffset) {
+        bottomLeft = {
+                bottomLeft.first + xOffset,
+                bottomLeft.second + yOffset
+        };
+
+        bottomRight = {
+                bottomRight.first + xOffset,
+                bottomRight.second + yOffset
+        };
+
+        topLeft = {
+                topLeft.first + xOffset,
+                topLeft.second + yOffset
+        };
+
+        topRight = {
+                topRight.first + xOffset,
+                topRight.second + yOffset
+        };
     }
 
     bool checkCollisionWithShip(const Asteroids::Asteroid& asteroid) {
@@ -166,6 +181,60 @@ namespace HanShip {
         projectiles[projectilesSize].topRight = {HanShip::topRight.first - 20, HanShip::topRight.second + 25};
         projectiles[projectilesSize].deleted = false;
         ++projectilesSize;
+    }
+
+    void updateShip() {
+
+        if (!GAME_OVER) {
+
+            if (timeSinceLastShotFired > 0) {
+                --timeSinceLastShotFired;
+            }
+
+            auto actionUp = glfwGetKey(Window::winPtr, GLFW_KEY_UP);
+            auto actionDown = glfwGetKey(Window::winPtr, GLFW_KEY_DOWN);
+            auto actionLeft = glfwGetKey(Window::winPtr, GLFW_KEY_LEFT);
+            auto actionRight = glfwGetKey(Window::winPtr, GLFW_KEY_RIGHT);
+            auto actionSpace = glfwGetKey(Window::winPtr, GLFW_KEY_SPACE);
+
+            float impulse = 5.0f;
+
+            if (actionUp == GLFW_PRESS) {
+                if (topRight.second + impulse < Window::height || topLeft.second + impulse < Window::height)
+                    moveShip(0.f, impulse);
+            }
+
+            if (actionDown == GLFW_PRESS) {
+                if (bottomRight.second - impulse > 0 || bottomLeft.second - impulse > 0)
+                    moveShip(0.f, -impulse);
+            }
+
+            if (actionLeft == GLFW_PRESS) {
+                if (bottomLeft.first - impulse > 0 || topLeft.first - impulse > 0)
+                    moveShip(-impulse, 0.f);
+            }
+
+            if (actionRight == GLFW_PRESS) {
+                if (topRight.first + impulse < Window::width || bottomRight.first + impulse < Window::width)
+                    moveShip(impulse, 0.f);
+            }
+
+            if (actionSpace == GLFW_PRESS) {
+                if (timeSinceLastShotFired <= 0) {
+                    pewPew();
+                    timeSinceLastShotFired = fireCoolDown;
+                }
+            }
+
+        }
+
+        if (HanShip::deleted && spriteCurrFrame < HanShip::maxFrames) {
+            ++HanShip::frameCounter;
+            if (HanShip::frameCounter > HanShip::spriteFrameDuration) {
+                HanShip::frameCounter = 0;
+                ++HanShip::spriteCurrFrame;
+            }
+        }
     }
 
 }
