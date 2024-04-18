@@ -28,6 +28,13 @@ namespace HanShip {
     //bool animationActive = false;
     bool deleted = false;
 
+    void resetShipPos() {
+        bottomLeft = {Window::width/2-shipWidthFromCenter, Window::height/2-shipWidthFromCenter};
+        bottomRight = {Window::width/2+shipWidthFromCenter, Window::height/2-shipWidthFromCenter};
+        topLeft = {Window::width/2-shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
+        topRight = {Window::width/2+shipWidthFromCenter, Window::height/2+shipWidthFromCenter};
+    }
+
     void moveShip(float xOffset, float yOffset) {
         bottomLeft = {
                 bottomLeft.first + xOffset,
@@ -162,12 +169,16 @@ namespace HanShip {
         }
     }
 
+    void clearProjectiles() {
+        for (auto& projectile : projectiles) {
+            projectile.deleted = true;
+        }
+        projectilesSize = 0;
+    }
+
     void pewPew() {
         if (projectilesSize >= maxProjectiles) {
-            for (auto& projectile : projectiles) {
-                projectile.deleted = true;
-            }
-            projectilesSize = 0;
+            clearProjectiles();
         }
         projectiles[projectilesSize].bottomLeft = {HanShip::topLeft.first + 15, HanShip::topLeft.second};
         projectiles[projectilesSize].bottomRight = {HanShip::topLeft.first + 20, HanShip::topLeft.second};

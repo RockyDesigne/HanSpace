@@ -27,7 +27,7 @@ namespace Asteroids {
         COORDS bottomRight;
         COORDS topLeft;
         COORDS topRight;
-        int spriteFrameDuration = 5;
+        static int spriteFrameDuration;
         int spriteCurrFrame = 0;
         int frameCounter = 0;
         static int maxFrames;
@@ -77,6 +77,7 @@ namespace Asteroids {
     };
 
     int Asteroid::maxFrames = 5;
+    int Asteroid::spriteFrameDuration = 5;
 
     /*
     COORDS bottomLeft = {0.0f,Window::height - asteroidWidthFromCenter};
@@ -110,17 +111,25 @@ namespace Asteroids {
         }
     }
 
+    void clearAsteroids() {
+        for (auto& asteroid : asteroids) {
+            asteroid.deleted = true;
+            asteroid.spriteCurrFrame = 5;
+        }
+        asteroidsSize = 0;
+    }
+
     void pushAsteroid(float xOffset, float yOffset) {
         if (asteroidsSize >= maxAsteroids) {
-            for (auto& asteroid : asteroids)
-                asteroid.deleted = true;
-            asteroidsSize = 0;
+            clearAsteroids();
         }
         asteroids[asteroidsSize].bottomLeft = {xOffset,(float)Window::height - asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].bottomRight = {xOffset + asteroidWidthFromCenter * 2, (float)Window::height - asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].topLeft = {xOffset, (float) Window::height + asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].topRight = {xOffset + asteroidWidthFromCenter * 2 , (float) Window::height + asteroidWidthFromCenter + yOffset};
         asteroids[asteroidsSize].deleted = false;
+        asteroids[asteroidsSize].spriteCurrFrame = 0;
+        asteroids[asteroidsSize].frameCounter = 0;
         ++asteroidsSize;
     }
 

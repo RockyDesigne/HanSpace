@@ -16,6 +16,19 @@
 
 auto lastUpState = GLFW_RELEASE;
 
+void restart() {
+    Asteroids::clearAsteroids();
+
+    HanShip::clearProjectiles();
+
+    HanShip::resetShipPos();
+    HanShip::deleted = false;
+    HanShip::spriteCurrFrame = 0;
+    HanShip::frameCounter = 0;
+
+    GAME_OVER = false;
+}
+
 void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
     using namespace HanShip;
     (void) scancode;
@@ -26,6 +39,14 @@ void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int m
                     glfwSetWindowShouldClose(window, true);
                 break;
             }
+            case GLFW_KEY_ENTER: {
+                if (GAME_OVER && action == GLFW_PRESS) {
+                    restart();
+                }
+                break;
+            }
+            default:
+                break;
         }
 }
 
@@ -285,7 +306,9 @@ int main() {
     double timeToNextAsteroid = asteroidTime;
 
     const char* gameOverText = "Game Over!";
-    const int gameOverTextLen = strlen(gameOverText);
+    const int gameOverTextLen = (int) strlen(gameOverText);
+    const char* resetGameText = "Press Enter to restart";
+    const int resetGameTextLen = (int) strlen(resetGameText);
 
     float letterSpace = 37.0f;
     glfwSwapInterval(1);
@@ -403,6 +426,12 @@ int main() {
                 drawGlyph(Window::width/2 - (gameOverTextLen/3 * 60) + (letterSpace*i), Window::height/2 + 60, gameOverText[i]);
                 glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
             }
+
+            for (int i = 0; i < resetGameTextLen; ++i) {
+                drawGlyph(Window::width/2 - (resetGameTextLen/3 * 60) + (letterSpace*i), Window::height/2 + 180, resetGameText[i]);
+                glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+            }
+
         }
 
         //Asteroids::updateAsteroids();
