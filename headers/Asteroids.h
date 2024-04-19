@@ -103,7 +103,7 @@ namespace Asteroids {
                 asteroids[i].updatePos(0.0f, -2.0f);
             else if (asteroids[i].deleted && asteroids[i].spriteCurrFrame < Asteroid::maxFrames) {
                 ++asteroids[i].frameCounter;
-                if (asteroids[i].frameCounter > asteroids[i].spriteFrameDuration) {
+                if (asteroids[i].frameCounter > Asteroids::Asteroid::spriteFrameDuration) {
                     asteroids[i].frameCounter = 0;
                     ++asteroids[i].spriteCurrFrame;
                 }

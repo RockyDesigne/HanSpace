@@ -52,10 +52,7 @@ namespace Shaders {
                                  "uniform sampler2D boomTexture;\n"
                                  "uniform bool deleted;\n"
                                  "void main() {\n"
-                                 "    if (!deleted)\n"
                                  "      outColor = texture(asteroidTexture, vec2(fragTexCoords.x,fragTexCoords.y));\n"
-                                 "    else\n"
-                                 "      outColor = texture(boomTexture, vec2(fragTexCoords.x,fragTexCoords.y));\n"
                                  "}\n";
 
     const char* projectileShader = "#version 460 core\n"

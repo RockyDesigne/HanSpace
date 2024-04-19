@@ -14,6 +14,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <algorithm>
+
 namespace Textures {
     int width, height, nrChannels;
     GLuint shipTexId, backgroundTexId, asteroidTexId, boomTexId, shipBoomTexId;
@@ -126,7 +128,7 @@ namespace Textures {
     }
 
     void bindBoomTexture() {
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, boomTexId);
     }
 

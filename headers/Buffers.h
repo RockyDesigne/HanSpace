@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "glad.h"
 #include <cassert>
+#include <cstring>
 
 namespace Buffers {
     enum Attributes {
@@ -24,7 +25,7 @@ namespace Buffers {
         [[maybe_unused]]    float tex_x, tex_y;
     };
 
-    constexpr const int verticesCap = Window::maxWidth * Window::maxHeight;
+    constexpr const int verticesCap = 10'0000;
     Vertex vertices[verticesCap];
     size_t verticesCount = 0;
 
@@ -80,6 +81,7 @@ namespace Buffers {
 
     void clear_buff() {
         verticesCount = 0;
+        //memset(vertices, 0, verticesCap * sizeof (Vertex));
     }
 
     void sync_buffers() {

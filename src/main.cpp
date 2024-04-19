@@ -14,7 +14,15 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-auto lastUpState = GLFW_RELEASE;
+auto score = "Score: " + std::to_string(SCORE);
+char* text = score.data();
+int textLen = (int) strlen(text);
+
+void updateText() {
+    score = "Score: " + std::to_string(SCORE);
+    text = score.data();
+    textLen = (int) score.length();
+}
 
 void restart() {
     Asteroids::clearAsteroids();
@@ -25,6 +33,9 @@ void restart() {
     HanShip::deleted = false;
     HanShip::spriteCurrFrame = 0;
     HanShip::frameCounter = 0;
+
+    SCORE = 0;
+    updateText();
 
     GAME_OVER = false;
 }
@@ -196,14 +207,10 @@ int main() {
 }
 */
 
-auto score = "Score: " + std::to_string(SCORE);
-char* text = score.data();
-int textLen = (int) strlen(text);
-
-void updateText() {
-    score = "Score: " + std::to_string(SCORE);
-    text = score.data();
-    textLen = (int) score.length();
+void drawBuffer() {
+    for (int i = 0; i < (int) Buffers::verticesCount / 4; ++i) {
+        glDrawArrays(GL_TRIANGLE_STRIP, i * 4, 4);
+    }
 }
 
 int main() {
@@ -366,19 +373,26 @@ int main() {
             accumulator -= timeStep;
         }
 
-        // Rendering
+        //rendering
         glClear(GL_COLOR_BUFFER_BIT);
-        Buffers::clear_buff();
 
+        //send background data
         glUseProgram(BACKGROUND_PROGRAM);
         glUniform1f(BACKGROUND_PROGRAM_YOFFSET, yOffset);
+
+        Buffers::clear_buff();
 
         Textures::bindBackgroundTexture();
         BackGround::drawBackground();
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        Buffers::sync_buffers();
 
+        drawBuffer();
+
+        //send ship data
         glUseProgram(SHIP_PROGRAM);
+
+        Buffers::clear_buff();
 
         if (!HanShip::deleted) {
             Textures::bindShipTexture();
@@ -388,54 +402,81 @@ int main() {
             HanShip::drawShipBoom();
         }
 
-        glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+        Buffers::sync_buffers();
 
+        drawBuffer();
+
+        //send asteroid data
         glUseProgram(ASTEROID_PROGRAM);
+        //Textures::bindBoomTexture();
+
+        Buffers::clear_buff();
+
         Textures::bindAsteroidTexture();
+
+        for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
+            if (!Asteroids::asteroids[i].deleted)
+                Asteroids::asteroids[i].drawAsteroid();
+        }
+
+        Buffers::sync_buffers();
+
+        drawBuffer();
+
+        Buffers::clear_buff();
+
         Textures::bindBoomTexture();
 
-        for (const auto& asteroid : Asteroids::asteroids) {
-            glUniform1i(ASTEROID_PROGRAM_DELETED_UNIFORM, asteroid.deleted);
-            if (!asteroid.deleted) {
-                asteroid.drawAsteroid();
-                glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
-            } else if (asteroid.deleted && asteroid.spriteCurrFrame < Asteroids::Asteroid::maxFrames) {
-                asteroid.drawBoom();
-                glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
+        for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
+            if (Asteroids::asteroids[i].deleted && Asteroids::asteroids[i].spriteCurrFrame < Asteroids::Asteroid::maxFrames) {
+                Asteroids::asteroids[i].drawBoom();
             }
         }
 
+        Buffers::sync_buffers();
+
+        drawBuffer();
+
+        //send projectile data
         glUseProgram(PROJECTILE_PROGRAM);
+        Buffers::clear_buff();
 
-        for (const auto& projectile : HanShip::projectiles) {
-            if (!projectile.deleted) {
-                projectile.drawProjectile();
-                glDrawArrays(GL_TRIANGLE_STRIP, (GLint) Buffers::verticesCount - 4, 4);
+        for (int i = 0; i < HanShip::projectilesSize; ++i) {
+            if (!HanShip::projectiles[i].deleted) {
+                HanShip::projectiles[i].drawProjectile();
             }
         }
 
+        Buffers::sync_buffers();
+
+        drawBuffer();
+
+        //send text data
         glUseProgram(TEXT_PROGRAM);
+
+        Buffers::clear_buff();
+
         bindFont();
+
         for (int i = 0; i < textLen; ++i) {
             drawGlyph(10 + (letterSpace*i), 60, text[i]);
-            glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
         }
 
         if (GAME_OVER) {
             for (int i = 0; i < gameOverTextLen; ++i) {
-                drawGlyph(Window::width/2 - (gameOverTextLen/3 * 60) + (letterSpace*i), Window::height/2 + 60, gameOverText[i]);
-                glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+                drawGlyph(Window::width / 2 - (gameOverTextLen / 3 * 60) + (letterSpace * i), Window::height / 2 + 60,
+                          gameOverText[i]);
             }
 
             for (int i = 0; i < resetGameTextLen; ++i) {
-                drawGlyph(Window::width/2 - (resetGameTextLen/3 * 60) + (letterSpace*i), Window::height/2 + 180, resetGameText[i]);
-                glDrawArrays(GL_TRIANGLE_STRIP, (GLint)Buffers::verticesCount - 4, 4);
+                drawGlyph(Window::width / 2 - (resetGameTextLen / 3 * 60) + (letterSpace * i), Window::height / 2 + 180,
+                          resetGameText[i]);
             }
-
         }
 
-        //Asteroids::updateAsteroids();
         Buffers::sync_buffers();
+
+        drawBuffer();
 
         glfwSwapBuffers(winPtr);
         glfwPollEvents();
