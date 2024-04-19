@@ -9,6 +9,7 @@
 #include "Asteroids.h"
 #include "Background.h"
 #include "Textures.h"
+#include "ttfBuffer.h"
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 #include "stb_truetype.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -125,8 +126,7 @@ void initWindow() {
 constexpr uint64_t bitmapWidth = 512;
 constexpr uint64_t bitmapHeight = 512;
 
-constexpr uint64_t fileSize = 50'000;
-unsigned char ttf_buffer[fileSize];
+//constexpr uint64_t fileSize = 50'000;
 unsigned char pixels[512 * 512];
 stbtt_bakedchar chardata[200];
 
@@ -134,19 +134,14 @@ GLuint fontTexture;
 
 void my_stbtt_initfont()
 {
-    auto file = fopen(R"(G:\projects\repos\HanGames\HanSpace\font\LTSuperiorMono-Regular.otf)", "rb");
-    fread(ttf_buffer, 1, fileSize,
-          file);
-
-    fclose(file);
 
     stbtt_fontinfo font;
 
-    auto offset = stbtt_GetFontOffsetForIndex(ttf_buffer,0);
+    auto offset = stbtt_GetFontOffsetForIndex(ttfBuffer,0);
 
-    stbtt_InitFont(&font, ttf_buffer, offset);
+    stbtt_InitFont(&font, ttfBuffer, offset);
 
-    stbtt_BakeFontBitmap(ttf_buffer, 0, 64, pixels, 512, 512, 0, font.numGlyphs, chardata);
+    stbtt_BakeFontBitmap(ttfBuffer, 0, 64, pixels, 512, 512, 0, font.numGlyphs, chardata);
 
     glGenTextures(1, &fontTexture);
     glBindTexture(GL_TEXTURE_2D, fontTexture);
@@ -155,7 +150,6 @@ void my_stbtt_initfont()
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 
 }
 
@@ -177,7 +171,7 @@ void drawGlyph(float x, float y, char c) {
                        &q,      // output: quad to draw
                        1);
 
-    float windowHeight = Window::height; // replace with actual function to get window height
+    auto windowHeight = (float) Window::height; // replace with actual function to get window height
 
     // invert y coordinates
     q.y0 = windowHeight - q.y0;
@@ -459,17 +453,17 @@ int main() {
         bindFont();
 
         for (int i = 0; i < textLen; ++i) {
-            drawGlyph(10 + (letterSpace*i), 60, text[i]);
+            drawGlyph(10 + (letterSpace*(float)i), 60, text[i]);
         }
 
         if (GAME_OVER) {
             for (int i = 0; i < gameOverTextLen; ++i) {
-                drawGlyph(Window::width / 2 - (gameOverTextLen / 3 * 60) + (letterSpace * i), Window::height / 2 + 60,
+                drawGlyph((float) Window::width / 2 - ((float)gameOverTextLen / 3 * 60) + (letterSpace * (float)i), (float)Window::height / 2 + 60,
                           gameOverText[i]);
             }
 
             for (int i = 0; i < resetGameTextLen; ++i) {
-                drawGlyph(Window::width / 2 - (resetGameTextLen / 3 * 60) + (letterSpace * i), Window::height / 2 + 180,
+                drawGlyph((float) Window::width / 2 - ((float)resetGameTextLen / 3 * 60) + (letterSpace * (float)i), (float) Window::height / 2 + 180,
                           resetGameText[i]);
             }
         }
