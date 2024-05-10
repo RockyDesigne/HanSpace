@@ -18,9 +18,6 @@ namespace Asteroids {
 
     constexpr int asteroidWidthFromCenter = 50;
 
-    std::uniform_int_distribution asteroidXdist {0,
-                                                 Window::maxWidth - asteroidWidthFromCenter * 2};
-
     struct Asteroid {
 
         COORDS bottomLeft;
@@ -58,7 +55,7 @@ namespace Asteroids {
 
         void drawAsteroid() const {
 
-            Buffers::push_vert(bottomLeft.first ,bottomLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
+            Buffers::push_vert(bottomLeft.first,bottomLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 0.0f);
             Buffers::push_vert(bottomRight.first ,bottomRight.second , 1.0f,0.5f,0.75f, 1.0f, 0.0f);
             Buffers::push_vert(topLeft.first ,topLeft.second , 1.0f, 0.5f,0.75f, 0.0f, 1.0f);
             Buffers::push_vert(topRight.first ,topRight.second ,1.0f, 0.5f,0.75, 1.0f, 1.0f);
@@ -92,8 +89,9 @@ namespace Asteroids {
     void pushAsteroid(float xOffset, float yOffset);
     void makeRandAsteroids(int nr) {
         for (int i = 0; i < nr; ++i) {
-            pushAsteroid((float) std::clamp(Random::getRandNum(asteroidXdist), 0, Window::width - asteroidWidthFromCenter * 2),
-                         0.0f);
+            pushAsteroid((float)
+                    Random::getRandNum(std::uniform_int_distribution  {0,Window::width - asteroidWidthFromCenter * 2}),
+                    0.0f);
         }
     }
 

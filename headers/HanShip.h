@@ -142,8 +142,8 @@ namespace HanShip {
     void drawShipBoom() {
         float width = 1.0f / 8.0f;
 
-        auto tex_x = (float) (HanShip::spriteCurrFrame % 8);
-        auto tex_y = (float) (HanShip::spriteCurrFrame / 8);
+        auto tex_x = (float) (HanShip::spriteCurrFrame % 8);//coloana
+        auto tex_y = (float) (HanShip::spriteCurrFrame / 8);//randu
 
         Buffers::push_vert(bottomLeft.first, bottomLeft.second, 1.0f, 0.5f, 0.75f, width * tex_x, width * tex_y);
         Buffers::push_vert(bottomRight.first, bottomRight.second, 1.0f, 0.5f, 0.75f, width * (tex_x + 1), width * tex_y);
@@ -196,17 +196,18 @@ namespace HanShip {
 
     void updateShip() {
 
+        auto actionUp = glfwGetKey(Window::winPtr, GLFW_KEY_UP);
+        auto actionDown = glfwGetKey(Window::winPtr, GLFW_KEY_DOWN);
+        auto actionLeft = glfwGetKey(Window::winPtr, GLFW_KEY_LEFT);
+        auto actionRight = glfwGetKey(Window::winPtr, GLFW_KEY_RIGHT);
+        auto actionSpace = glfwGetKey(Window::winPtr, GLFW_KEY_SPACE);
+        auto actionBackSpace = glfwGetKey(Window::winPtr, GLFW_KEY_BACKSPACE);
+
         if (!GAME_OVER) {
 
             if (timeSinceLastShotFired > 0) {
                 --timeSinceLastShotFired;
             }
-
-            auto actionUp = glfwGetKey(Window::winPtr, GLFW_KEY_UP);
-            auto actionDown = glfwGetKey(Window::winPtr, GLFW_KEY_DOWN);
-            auto actionLeft = glfwGetKey(Window::winPtr, GLFW_KEY_LEFT);
-            auto actionRight = glfwGetKey(Window::winPtr, GLFW_KEY_RIGHT);
-            auto actionSpace = glfwGetKey(Window::winPtr, GLFW_KEY_SPACE);
 
             float impulse = 5.0f;
 
@@ -237,6 +238,10 @@ namespace HanShip {
                 }
             }
 
+        } else if (GAME_WON) {
+            if (actionBackSpace == GLFW_PRESS) {
+                SHOW_CREDITS = true;
+            }
         }
 
         if (HanShip::deleted && spriteCurrFrame < HanShip::maxFrames) {

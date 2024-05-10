@@ -9,7 +9,7 @@
 
 namespace Random {
     std::mt19937 mt {std::random_device{}()};
-    int getRandNum(std::uniform_int_distribution<int>& dist) {
+    int getRandNum(std::uniform_int_distribution<> dist) {
         return dist(mt);
     }
 }

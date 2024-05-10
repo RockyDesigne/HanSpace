@@ -39,6 +39,8 @@ void restart() {
     updateText();
 
     GAME_OVER = false;
+    GAME_WON = false;
+    SHOW_CREDITS = false;
 }
 
 void handleKeyPress(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -217,8 +219,8 @@ int main() {
     glfwSetFramebufferSizeCallback(winPtr, handleWindowResize);
 
     //enable gl debug
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(handleMessageCallback, nullptr);
+    //glEnable(GL_DEBUG_OUTPUT);
+    //glDebugMessageCallback(handleMessageCallback, nullptr);
 
     // Enable blending
     glEnable(GL_BLEND);
@@ -301,7 +303,7 @@ int main() {
     float speed = 0.25f;
 
     double lastTime = glfwGetTime();
-    constexpr double timeStep = 1.0 / 60.0; // 60 updates per second
+    constexpr double timeStep = 1.0 / 60.0;
     double accumulator = 0.0;
     constexpr double asteroidTime = 50.0;
     double timeToNextAsteroid = asteroidTime;
@@ -310,9 +312,24 @@ int main() {
     const int gameOverTextLen = (int) strlen(gameOverText);
     const char* resetGameText = "Press Enter to restart";
     const int resetGameTextLen = (int) strlen(resetGameText);
+    const char* gameWonText = "You won!";
+    const int gameWonTextLen = (int) strlen(gameWonText);
+    const char* andalusWonText = "GG Andalus!";
+    const int andalusWonTextLen = (int) strlen(andalusWonText);
+    const char* seeCreditsText = "BackSpace to see credits";
+    const int seeCreditsTextLen = (int) strlen(seeCreditsText);
+    const char* creditsText = "Credits";
+    const int creditsTextLen = (int) strlen(creditsText);
+    const char* hanTxt = "Han";
+    const int hanTxtLen = (int) strlen(hanTxt);
+    const char* andalusTxt = "Andalus";
+    const int andalusTxtLen = (int) strlen(andalusTxt);
+    const char* urMomTxt = "Ur mom";
+    const int urMomTxtLen = (int) strlen(urMomTxt);
 
     float letterSpace = 37.0f;
-    glfwSwapInterval(1);
+
+    glfwSwapInterval(1);//v-sync
 
     while (!glfwWindowShouldClose(winPtr)) {
 
@@ -360,6 +377,10 @@ int main() {
                     }
                 }
                 updateText();
+                if (SCORE >= VICTORY_SCORE) {
+                    GAME_WON = true;
+                    GAME_OVER = true;
+                }
             }
             Asteroids::updateAsteroids();
             HanShip::updateProjectiles();
@@ -402,7 +423,6 @@ int main() {
 
         //send asteroid data
         glUseProgram(ASTEROID_PROGRAM);
-        //Textures::bindBoomTexture();
 
         Buffers::clear_buff();
 
@@ -457,16 +477,68 @@ int main() {
         }
 
         if (GAME_OVER) {
-            for (int i = 0; i < gameOverTextLen; ++i) {
-                drawGlyph((float) Window::width / 2 - ((float)gameOverTextLen / 3 * 60) + (letterSpace * (float)i), (float)Window::height / 2 + 60,
-                          gameOverText[i]);
-            }
+            if (GAME_WON) {
+                if (SHOW_CREDITS) {
+                    for (int i = 0; i < creditsTextLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) creditsTextLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 - 60,
+                                  creditsText[i]);
+                    }
 
+                    for (int i = 0; i < hanTxtLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) hanTxtLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 + 0,
+                                  hanTxt[i]);
+                    }
+
+                    for (int i = 0; i < andalusTxtLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) andalusTxtLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 + 60,
+                                  andalusTxt[i]);
+                    }
+
+                    for (int i = 0; i < urMomTxtLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) urMomTxtLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 + 120,
+                                  urMomTxt[i]);
+                    }
+
+                } else {
+                    for (int i = 0; i < gameWonTextLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) gameWonTextLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 + 0,
+                                  gameWonText[i]);
+                    }
+
+                    for (int i = 0; i < andalusWonTextLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) andalusWonTextLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 + 60,
+                                  andalusWonText[i]);
+                    }
+
+                    for (int i = 0; i < seeCreditsTextLen; ++i) {
+                        drawGlyph((float) Window::width / 2 - ((float) seeCreditsTextLen / 3 * 60) +
+                                  (letterSpace * (float) i), (float) Window::height / 2 + 120,
+                                  seeCreditsText[i]);
+                    }
+                }
+
+            } else {
+                for (int i = 0; i < gameOverTextLen; ++i) {
+                    drawGlyph(
+                            (float) Window::width / 2 - ((float) gameOverTextLen / 3 * 60) + (letterSpace * (float) i),
+                            (float) Window::height / 2 + 60,
+                            gameOverText[i]);
+                }
+            }
             for (int i = 0; i < resetGameTextLen; ++i) {
-                drawGlyph((float) Window::width / 2 - ((float)resetGameTextLen / 3 * 60) + (letterSpace * (float)i), (float) Window::height / 2 + 180,
-                          resetGameText[i]);
+                drawGlyph(
+                        (float) Window::width / 2 - ((float) resetGameTextLen / 3 * 60) + (letterSpace * (float) i),
+                        (float) Window::height / 2 + 180,
+                        resetGameText[i]);
             }
         }
+
 
         Buffers::sync_buffers();
 

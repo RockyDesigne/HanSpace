@@ -14,7 +14,7 @@ set(SOURCES src/glad.c src/main.cpp headers/Asteroids.h headers/Randomization.h 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 target_compile_options(${PROJECT_NAME}
-        PRIVATE -Wall -Wextra -pedantic -ggdb -std=c++20
+        PRIVATE -Wall -Wextra -pedantic -ggdb -std=c++20 -O3
         )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
