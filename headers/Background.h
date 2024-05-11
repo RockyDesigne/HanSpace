@@ -7,9 +7,20 @@
 
 #include "Window.h"
 #include "Buffers.h"
+#include "Textures.h"
+#include "HanBackgroundTexture.h"
 #include <utility>
 
 namespace BackGround {
+
+    TextureData backgroundTexture {
+            .textureData = HanBackground_png,
+            .dataLen = (int)HanBackground_png_len,
+            .textureId = 0,
+            .internalFormat = RGB,
+            .format = RGB
+    };
+
     using COORDS = std::pair<float,float>;
 
     COORDS bottomLeft = {0.f,0.f};

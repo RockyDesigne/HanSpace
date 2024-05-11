@@ -239,8 +239,13 @@ int main() {
     SHIP_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(SHIP_PROGRAM, "resolution");
     glUniform2f(SHIP_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
-    Textures::createShipTexture();
-    Textures::createShipBoomTexture();
+    Textures::createTexture(HanShip::shipTexture.textureData,
+                            HanShip::shipTexture.dataLen,
+                            HanShip::shipTexture.textureId);
+
+    Textures::createTexture(HanShip::shipBoomTexture.textureData,
+                            HanShip::shipBoomTexture.dataLen,
+                            HanShip::shipBoomTexture.textureId);
 
     //link bkg
     Shaders::link_program(vShaderId, backgroundShaderId, BACKGROUND_PROGRAM);
@@ -253,7 +258,11 @@ int main() {
 
     //glUniform1i(glGetUniformLocation(BACKGROUND_PROGRAM, "backgroundTexture"), 0);
 
-    Textures::createBackgroundTexture();
+    Textures::createTexture(BackGround::backgroundTexture.textureData,
+                            BackGround::backgroundTexture.dataLen,
+                            BackGround::backgroundTexture.textureId,
+                            BackGround::backgroundTexture.internalFormat,
+                            BackGround::backgroundTexture.format);
 
     //link asteroid
     Shaders::link_program(vShaderId, asteroidShaderId, ASTEROID_PROGRAM);
@@ -263,8 +272,13 @@ int main() {
     ASTEROID_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(ASTEROID_PROGRAM, "resolution");
     glUniform2f(ASTEROID_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
-    Textures::createAsteroidTexture();
-    Textures::createBoomTexture();
+    Textures::createTexture(Asteroids::asteroidTexture.textureData,
+                            Asteroids::asteroidTexture.dataLen,
+                            Asteroids::asteroidTexture.textureId);
+
+    Textures::createTexture(Asteroids::asteroidBoomTexture.textureData,
+                            Asteroids::asteroidBoomTexture.dataLen,
+                            Asteroids::asteroidBoomTexture.textureId);
 
     glUniform1i(glGetUniformLocation(ASTEROID_PROGRAM, "asteroidTexture"), 0);
     glUniform1i(glGetUniformLocation(ASTEROID_PROGRAM, "boomTexture"), 1);
@@ -376,7 +390,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        Textures::bindBackgroundTexture();
+        Textures::bindTexture(BackGround::backgroundTexture.textureId);
         BackGround::drawBackground();
 
         Buffers::sync_buffers();
@@ -389,10 +403,10 @@ int main() {
         Buffers::clear_buff();
 
         if (!HanShip::deleted) {
-            Textures::bindShipTexture();
+            Textures::bindTexture(HanShip::shipTexture.textureId);
             HanShip::drawShip();
         } else {
-            Textures::bindShipBoomTexture();
+            Textures::bindTexture(HanShip::shipBoomTexture.textureId);
             HanShip::drawShipBoom();
         }
 
@@ -406,7 +420,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        Textures::bindAsteroidTexture();
+        Textures::bindTexture(Asteroids::asteroidTexture.textureId);
 
         for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
             if (!Asteroids::asteroids[i].deleted)
@@ -419,7 +433,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        Textures::bindBoomTexture();
+        Textures::bindTexture(Asteroids::asteroidBoomTexture.textureId);
 
         for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
             if (Asteroids::asteroids[i].deleted && Asteroids::asteroids[i].spriteCurrFrame < Asteroids::Asteroid::maxFrames) {

@@ -9,9 +9,24 @@
 #include "Buffers.h"
 #include "Asteroids.h"
 #include "Global_Variables.h"
+#include "ShipBoomTexture.h"
+#include "HanShipTexture.h"
+#include "Textures.h"
 #include <utility>
 
 namespace HanShip {
+    TextureData shipTexture {
+        .textureData = HanShipTexture,
+        .dataLen = HanShipTextureLen,
+        .textureId = 0
+    };
+
+    TextureData shipBoomTexture {
+            .textureData = ShipBoomPng,
+            .dataLen = (int)ShipBoomPngLen,
+            .textureId = 0
+    };
+
     using COORDS = std::pair<float,float>;
     int shipWidthFromCenter = 50;
     COORDS bottomLeft = {Window::width/2-shipWidthFromCenter, Window::height/2-shipWidthFromCenter};

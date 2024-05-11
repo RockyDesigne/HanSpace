@@ -5,6 +5,9 @@
 #ifndef HANSPACE_ASTEROIDS_H
 #define HANSPACE_ASTEROIDS_H
 
+#include "Textures.h"
+#include "HanAsteroidTexture.h"
+#include "BoomTexture.h"
 #include "Window.h"
 #include "Buffers.h"
 #include "Randomization.h"
@@ -13,6 +16,18 @@
 #include <algorithm>
 
 namespace Asteroids {
+
+    TextureData asteroidTexture {
+        .textureData = HanAsteroid_png,
+        .dataLen = (int)HanAsteroid_png_len,
+        .textureId = 0
+    };
+
+    TextureData asteroidBoomTexture {
+            .textureData = boomPng,
+            .dataLen = (int)boomPngLen,
+            .textureId = 0
+    };
 
     using COORDS = std::pair<float,float>;
 
