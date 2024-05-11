@@ -16,15 +16,15 @@
 
 namespace HanShip {
     TextureData shipTexture {
-        .textureData = HanShipTexture,
+        .data = HanShipTexture,
         .dataLen = HanShipTextureLen,
-        .textureId = 0
+        .id = 0
     };
 
     TextureData shipBoomTexture {
-            .textureData = ShipBoomPng,
+            .data = ShipBoomPng,
             .dataLen = (int)ShipBoomPngLen,
-            .textureId = 0
+            .id = 0
     };
 
     using COORDS = std::pair<float,float>;
@@ -226,7 +226,7 @@ namespace HanShip {
             float impulse = 5.0f;
 
             if (actionUp == GLFW_PRESS) {
-                if (topRight.second + impulse < Window::height || topLeft.second + impulse < Window::height)
+                if (topRight.second + impulse < (float) Window::height || topLeft.second + impulse < Window::height)
                     moveShip(0.f, impulse);
             }
 
@@ -241,7 +241,7 @@ namespace HanShip {
             }
 
             if (actionRight == GLFW_PRESS) {
-                if (topRight.first + impulse < Window::width || bottomRight.first + impulse < Window::width)
+                if (topRight.first + impulse < (float) Window::width || bottomRight.first + impulse < Window::width)
                     moveShip(impulse, 0.f);
             }
 

@@ -1,6 +1,7 @@
 #include "glad.h"
 #include <glfw3.h>
 #include <iostream>
+#include "Font.h"
 #include "Window.h"
 #include "HanShip.h"
 #include "Shaders.h"
@@ -9,11 +10,6 @@
 #include "Asteroids.h"
 #include "Background.h"
 #include "Textures.h"
-#include "ttfBuffer.h"
-#define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
-#include "stb_truetype.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 
 auto score = "Score: " + std::to_string(SCORE);
 char* text = score.data();
@@ -123,66 +119,6 @@ void initWindow() {
     gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
 }
 
-constexpr uint64_t bitmapWidth = 512;
-constexpr uint64_t bitmapHeight = 512;
-
-//constexpr uint64_t fileSize = 50'000;
-unsigned char pixels[512 * 512];
-stbtt_bakedchar chardata[200];
-
-GLuint fontTexture;
-
-void my_stbtt_initfont()
-{
-
-    stbtt_fontinfo font;
-
-    auto offset = stbtt_GetFontOffsetForIndex(ttfBuffer,0);
-
-    stbtt_InitFont(&font, ttfBuffer, offset);
-
-    stbtt_BakeFontBitmap(ttfBuffer, 0, 64, pixels, 512, 512, 0, font.numGlyphs, chardata);
-
-    glGenTextures(1, &fontTexture);
-    glBindTexture(GL_TEXTURE_2D, fontTexture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmapWidth, bitmapHeight, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-}
-
-void bindFont() {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, fontTexture);
-}
-
-void drawGlyph(float x, float y, char c) {
-
-    stbtt_aligned_quad q = {};
-
-    stbtt_GetBakedQuad(reinterpret_cast<const stbtt_bakedchar*>(chardata),
-                       512,
-                       512,  // same data as above
-                       c,             // character to display
-                       &x,
-                       &y,   // pointers to current position in screen pixel space
-                       &q,      // output: quad to draw
-                       1);
-
-    auto windowHeight = (float) Window::height; // replace with actual function to get window height
-
-    // invert y coordinates
-    q.y0 = windowHeight - q.y0;
-    q.y1 = windowHeight - q.y1;
-
-    Buffers::push_vert(q.x0,q.y0, 1.0f, 0.5f,0.75f, q.s0,q.t0);
-    Buffers::push_vert(q.x1,q.y0, 1.0f,0.5f,0.75f, q.s1,q.t0);
-    Buffers::push_vert(q.x0,q.y1, 1.0f, 0.5f,0.75f, q.s0,q.t1);
-    Buffers::push_vert(q.x1,q.y1,1.0f, 0.5f,0.75, q.s1,q.t1);
-}
-
 /*
 int main() {
     fread(ttf_buffer, 1, fileSize,
@@ -239,13 +175,9 @@ int main() {
     SHIP_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(SHIP_PROGRAM, "resolution");
     glUniform2f(SHIP_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
-    Textures::createTexture(HanShip::shipTexture.textureData,
-                            HanShip::shipTexture.dataLen,
-                            HanShip::shipTexture.textureId);
+    Textures::createTexture(HanShip::shipTexture);
 
-    Textures::createTexture(HanShip::shipBoomTexture.textureData,
-                            HanShip::shipBoomTexture.dataLen,
-                            HanShip::shipBoomTexture.textureId);
+    Textures::createTexture(HanShip::shipBoomTexture);
 
     //link bkg
     Shaders::link_program(vShaderId, backgroundShaderId, BACKGROUND_PROGRAM);
@@ -258,11 +190,7 @@ int main() {
 
     //glUniform1i(glGetUniformLocation(BACKGROUND_PROGRAM, "backgroundTexture"), 0);
 
-    Textures::createTexture(BackGround::backgroundTexture.textureData,
-                            BackGround::backgroundTexture.dataLen,
-                            BackGround::backgroundTexture.textureId,
-                            BackGround::backgroundTexture.internalFormat,
-                            BackGround::backgroundTexture.format);
+    Textures::createTexture(BackGround::backgroundTexture);
 
     //link asteroid
     Shaders::link_program(vShaderId, asteroidShaderId, ASTEROID_PROGRAM);
@@ -272,13 +200,9 @@ int main() {
     ASTEROID_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(ASTEROID_PROGRAM, "resolution");
     glUniform2f(ASTEROID_PROGRAM_RESOLUTION_UNIFORM, static_cast<GLfloat>(Window::width),static_cast<GLfloat>(Window::height));
 
-    Textures::createTexture(Asteroids::asteroidTexture.textureData,
-                            Asteroids::asteroidTexture.dataLen,
-                            Asteroids::asteroidTexture.textureId);
+    Textures::createTexture(Asteroids::asteroidTexture);
 
-    Textures::createTexture(Asteroids::asteroidBoomTexture.textureData,
-                            Asteroids::asteroidBoomTexture.dataLen,
-                            Asteroids::asteroidBoomTexture.textureId);
+    Textures::createTexture(Asteroids::asteroidBoomTexture);
 
     glUniform1i(glGetUniformLocation(ASTEROID_PROGRAM, "asteroidTexture"), 0);
     glUniform1i(glGetUniformLocation(ASTEROID_PROGRAM, "boomTexture"), 1);
@@ -299,7 +223,7 @@ int main() {
     TEXT_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(TEXT_PROGRAM, "resolution");
     glUniform1i(glGetUniformLocation(TEXT_PROGRAM, "glyphTexture"), 0);
 
-    my_stbtt_initfont();
+    MyFont::my_stbtt_initfont();
 
     //prepare buffers
     Buffers::init_buffers();
@@ -390,7 +314,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        Textures::bindTexture(BackGround::backgroundTexture.textureId);
+        Textures::bindTexture(BackGround::backgroundTexture);
         BackGround::drawBackground();
 
         Buffers::sync_buffers();
@@ -403,10 +327,10 @@ int main() {
         Buffers::clear_buff();
 
         if (!HanShip::deleted) {
-            Textures::bindTexture(HanShip::shipTexture.textureId);
+            Textures::bindTexture(HanShip::shipTexture);
             HanShip::drawShip();
         } else {
-            Textures::bindTexture(HanShip::shipBoomTexture.textureId);
+            Textures::bindTexture(HanShip::shipBoomTexture);
             HanShip::drawShipBoom();
         }
 
@@ -420,7 +344,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        Textures::bindTexture(Asteroids::asteroidTexture.textureId);
+        Textures::bindTexture(Asteroids::asteroidTexture);
 
         for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
             if (!Asteroids::asteroids[i].deleted)
@@ -433,7 +357,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        Textures::bindTexture(Asteroids::asteroidBoomTexture.textureId);
+        Textures::bindTexture(Asteroids::asteroidBoomTexture);
 
         for (int i = 0; i < Asteroids::asteroidsSize; ++i) {
             if (Asteroids::asteroids[i].deleted && Asteroids::asteroids[i].spriteCurrFrame < Asteroids::Asteroid::maxFrames) {
@@ -464,20 +388,20 @@ int main() {
 
         Buffers::clear_buff();
 
-        bindFont();
+        MyFont::bindFont();
 
         for (int i = 0; i < textLen; ++i) {
-            drawGlyph(10 + (letterSpace*(float)i), 60, text[i]);
+            MyFont::drawGlyph(10 + (letterSpace*(float)i), 60, text[i]);
         }
 
         if (GAME_OVER) {
             for (int i = 0; i < gameOverTextLen; ++i) {
-                drawGlyph((float) Window::width / 2 - ((float)gameOverTextLen / 3 * 60) + (letterSpace * (float)i), (float)Window::height / 2 + 60,
+                MyFont::drawGlyph((float) Window::width / 2 - ((float)gameOverTextLen / 3 * 60) + (letterSpace * (float)i), (float)Window::height / 2 + 60,
                           gameOverText[i]);
             }
 
             for (int i = 0; i < resetGameTextLen; ++i) {
-                drawGlyph((float) Window::width / 2 - ((float)resetGameTextLen / 3 * 60) + (letterSpace * (float)i), (float) Window::height / 2 + 180,
+                MyFont::drawGlyph((float) Window::width / 2 - ((float)resetGameTextLen / 3 * 60) + (letterSpace * (float)i), (float) Window::height / 2 + 180,
                           resetGameText[i]);
             }
         }

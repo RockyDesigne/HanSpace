@@ -18,15 +18,15 @@
 namespace Asteroids {
 
     TextureData asteroidTexture {
-        .textureData = HanAsteroid_png,
+        .data = HanAsteroid_png,
         .dataLen = (int)HanAsteroid_png_len,
-        .textureId = 0
+        .id = 0
     };
 
     TextureData asteroidBoomTexture {
-            .textureData = boomPng,
+            .data = boomPng,
             .dataLen = (int)boomPngLen,
-            .textureId = 0
+            .id = 0
     };
 
     using COORDS = std::pair<float,float>;

@@ -14,9 +14,9 @@
 namespace BackGround {
 
     TextureData backgroundTexture {
-            .textureData = HanBackground_png,
+            .data = HanBackground_png,
             .dataLen = (int)HanBackground_png_len,
-            .textureId = 0,
+            .id = 0,
             .internalFormat = RGB,
             .format = RGB
     };
