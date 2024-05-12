@@ -8,34 +8,38 @@
 #include <cstdint>
 #include "Textures.h"
 #include "Buffers.h"
-#include "ttfBuffer.h"
 #include "glad.h"
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
+
+// Can only load one font at a time for now
+
+struct FontData {
+    GLuint textureId = 0;
+    const char* path = nullptr;
+};
 
 namespace MyFont {
 
     constexpr uint64_t bitmapWidth = 512;
     constexpr uint64_t bitmapHeight = 512;
 
-//constexpr uint64_t fileSize = 50'000;
     unsigned char pixels[512 * 512];
     stbtt_bakedchar chardata[200];
+    unsigned char ttf_buffer[1<<20];
 
-    GLuint fontTexture;
-
-    void my_stbtt_initfont() {
+    void my_stbtt_initfont_from_memory(FontData& fontData, const unsigned char* buffer) {
 
         stbtt_fontinfo font;
 
-        auto offset = stbtt_GetFontOffsetForIndex(ttfBuffer, 0);
+        auto offset = stbtt_GetFontOffsetForIndex(buffer, 0);
 
-        stbtt_InitFont(&font, ttfBuffer, offset);
+        stbtt_InitFont(&font, buffer, offset);
 
-        stbtt_BakeFontBitmap(ttfBuffer, 0, 64, pixels, 512, 512, 0, font.numGlyphs, chardata);
+        stbtt_BakeFontBitmap(buffer, 0, 64, pixels, 512, 512, 0, font.numGlyphs, chardata);
 
-        glGenTextures(1, &fontTexture);
-        glBindTexture(GL_TEXTURE_2D, fontTexture);
+        glGenTextures(1, &fontData.textureId);
+        glBindTexture(GL_TEXTURE_2D, fontData.textureId);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmapWidth, bitmapHeight, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
 
@@ -44,9 +48,26 @@ namespace MyFont {
 
     }
 
-    void bindFont() {
+    void my_stbtt_initfont_from_file(FontData& fontData) {
+        if (!fontData.path) {
+            throw std::runtime_error("No file path provided!");
+        }
+        auto file = fopen(fontData.path, "rb");
+        if (!file) {
+            throw std::runtime_error("could not open font file!");
+        }
+
+        fread(ttf_buffer, 1, 1<<20, file);
+
+        fclose(file);
+
+        my_stbtt_initfont_from_memory(fontData, ttf_buffer);
+
+    }
+
+    void bindFont(FontData font) {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fontTexture);
+        glBindTexture(GL_TEXTURE_2D, font.textureId);
     }
 
     void drawGlyph(float x, float y, char c) {

@@ -10,6 +10,7 @@
 #include "Asteroids.h"
 #include "Background.h"
 #include "Textures.h"
+#include "ttfBuffer.h"
 
 auto score = "Score: " + std::to_string(SCORE);
 char* text = score.data();
@@ -223,7 +224,9 @@ int main() {
     TEXT_PROGRAM_RESOLUTION_UNIFORM = glGetUniformLocation(TEXT_PROGRAM, "resolution");
     glUniform1i(glGetUniformLocation(TEXT_PROGRAM, "glyphTexture"), 0);
 
-    MyFont::my_stbtt_initfont();
+    FontData font {};
+
+    MyFont::my_stbtt_initfont_from_memory(font, ttfBuffer);
 
     //prepare buffers
     Buffers::init_buffers();
@@ -388,7 +391,7 @@ int main() {
 
         Buffers::clear_buff();
 
-        MyFont::bindFont();
+        MyFont::bindFont(font);
 
         for (int i = 0; i < textLen; ++i) {
             MyFont::drawGlyph(10 + (letterSpace*(float)i), 60, text[i]);
