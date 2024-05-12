@@ -12,6 +12,8 @@
 #include "Textures.h"
 #include "ttfBuffer.h"
 
+#define DEBUG
+
 auto score = "Score: " + std::to_string(SCORE);
 char* text = score.data();
 int textLen = (int) strlen(text);
@@ -107,56 +109,20 @@ void handleMessageCallback(GLenum source,
             type, severity, msg);
 }
 
-void initWindow() {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    using namespace Window;
-    winPtr = glfwCreateWindow(width, height, title, nullptr, nullptr);
-    glfwMakeContextCurrent(winPtr);
-
-    gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-}
-
-/*
-int main() {
-    fread(ttf_buffer, 1, fileSize,
-          fopen(R"(G:\projects\repos\HanGames\HanSpace\font\LTSuperiorMono-Regular.otf)", "rb"));
-
-    stbtt_fontinfo font;
-
-    stbtt_InitFont(&font, ttf_buffer, 0);
-
-    stbtt_BakeFontBitmap(ttf_buffer, 0, 64.0f, pixels, 512, 512, 32, 96, chardata);
-
-    if (!stbi_write_png("font.png", 512, 512, 1, pixels, 512)) {
-        throw std::runtime_error("Error writing file png!");
-    }
-
-}
-*/
-
-void drawBuffer() {
-    for (int i = 0; i < (int) Buffers::verticesCount / 4; ++i) {
-        glDrawArrays(GL_TRIANGLE_STRIP, i * 4, 4);
-    }
-}
-
 int main() {
 
-    initWindow();
+    Window::initWindow();
 
     //set window callbacks
     using namespace Window;
     glfwSetKeyCallback(winPtr, handleKeyPress);
     glfwSetFramebufferSizeCallback(winPtr, handleWindowResize);
 
+#ifdef DEBUG
     //enable gl debug
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(handleMessageCallback, nullptr);
-
+#endif
     // Enable blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -322,7 +288,7 @@ int main() {
 
         Buffers::sync_buffers();
 
-        drawBuffer();
+        Buffers::drawBuffer();
 
         //send ship data
         glUseProgram(SHIP_PROGRAM);
@@ -339,7 +305,7 @@ int main() {
 
         Buffers::sync_buffers();
 
-        drawBuffer();
+        Buffers::drawBuffer();
 
         //send asteroid data
         glUseProgram(ASTEROID_PROGRAM);
@@ -356,7 +322,7 @@ int main() {
 
         Buffers::sync_buffers();
 
-        drawBuffer();
+        Buffers::drawBuffer();
 
         Buffers::clear_buff();
 
@@ -370,7 +336,7 @@ int main() {
 
         Buffers::sync_buffers();
 
-        drawBuffer();
+        Buffers::drawBuffer();
 
         //send projectile data
         glUseProgram(PROJECTILE_PROGRAM);
@@ -384,7 +350,7 @@ int main() {
 
         Buffers::sync_buffers();
 
-        drawBuffer();
+        Buffers::drawBuffer();
 
         //send text data
         glUseProgram(TEXT_PROGRAM);
@@ -411,7 +377,7 @@ int main() {
 
         Buffers::sync_buffers();
 
-        drawBuffer();
+        Buffers::drawBuffer();
 
         glfwSwapBuffers(winPtr);
         glfwPollEvents();

@@ -95,6 +95,12 @@ namespace Buffers {
 
     }
 
+    void drawBuffer() {
+        for (int i = 0; i < (int) Buffers::verticesCount / 4; ++i) {
+            glDrawArrays(GL_TRIANGLE_STRIP, i * 4, 4);
+        }
+    }
+
 }
 
 #endif //HANSPACE_BUFFERS_H

@@ -14,6 +14,20 @@ namespace Window {
     const char* title = "HanSpace";
     constexpr const int maxWidth = 1920;
     constexpr const int maxHeight = 1080;
+
+    void initWindow() {
+        glfwInit();
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        using namespace Window;
+        winPtr = glfwCreateWindow(width, height, title, nullptr, nullptr);
+        glfwMakeContextCurrent(winPtr);
+
+        gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+    }
+
 }
 
 #endif //HANSPACE_WINDOW_H
